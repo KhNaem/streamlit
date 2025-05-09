@@ -1,3 +1,20 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import gspread
+from google.oauth2.service_account import Credentials
+
+st.set_page_config(page_title="Brush Dashboard", layout="wide")
+
+page = st.sidebar.radio("📂 เลือกหน้า", [
+    "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ",
+    "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
+    "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"
+])
+
+# ------------------ PAGE 3 ------------------
 if page == "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)":
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
