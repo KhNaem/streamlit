@@ -181,8 +181,10 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     if st.button("📤 บันทึก"):
         try:
             ws.update("H1", [[hours]])
-            ws.update("C3:C34", [[v] for v in upper])
-            ws.update("F3:F34", [[v] for v in lower])
+            #ws.update("C3:C34", [[v] for v in upper])
+            #ws.update("F3:F34", [[v] for v in lower])
+            ws.update("F3:F34", [[v] for v in upper])
+            ws.update("C3:C34", [[v] for v in lower])
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
             st.error(f"❌ {e}")
