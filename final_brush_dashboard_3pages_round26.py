@@ -201,29 +201,41 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         lower_df = df.iloc[:, 1:3]
         lower_df.columns = ["Lower_Previous", "Lower_Current"]
 
-        combined_df = pd.concat([upper_df, lower_df], axis=1)
+        # กรองเฉพาะค่าตัวเลข (drop non-numeric row)
+        upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
+        lower_df = lower_df[pd.to_numeric(lower_df["Lower_Current"], errors="coerce").notna()]
+
+        combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
         st.dataframe(combined_df, use_container_width=True)
 
         st.markdown("### 📊 กราฟรวม Upper และ Lower (Current vs Previous)")
+        brush_labels = [f"Brush {i+1}" for i in range(len(combined_df))]
+
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            y=upper_df["Upper_Current"], x=list(range(1, len(upper_df)+1)),
+            y=combined_df["Upper_Current"], x=brush_labels,
             mode='lines+markers', name='Upper Current'
         ))
         fig.add_trace(go.Scatter(
-            y=upper_df["Upper_Previous"], x=list(range(1, len(upper_df)+1)),
+            y=combined_df["Upper_Previous"], x=brush_labels,
             mode='lines+markers', name='Upper Previous'
         ))
         fig.add_trace(go.Scatter(
-            y=lower_df["Lower_Current"], x=list(range(1, len(lower_df)+1)),
+            y=combined_df["Lower_Current"], x=brush_labels,
             mode='lines+markers', name='Lower Current', line=dict(dash='dot')
         ))
         fig.add_trace(go.Scatter(
-            y=lower_df["Lower_Previous"], x=list(range(1, len(lower_df)+1)),
+            y=combined_df["Lower_Previous"], x=brush_labels,
             mode='lines+markers', name='Lower Previous', line=dict(dash='dot')
         ))
-        fig.update_layout(xaxis_title='Brush Number', yaxis_title='mm', height=600)
+        fig.update_layout(
+            xaxis_title='Brush Number',
+            yaxis_title='mm',
+            height=600,
+            xaxis=dict(tickmode='linear', tick0=1, dtick=1)
+        )
         st.plotly_chart(fig, use_container_width=True)
+
     except Exception as e:
         st.error(f"❌ ไม่สามารถโหลดข้อมูลจากชีตนี้ได้: {e}")
 
