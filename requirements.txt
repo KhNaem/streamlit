@@ -1,8 +1,10 @@
 streamlit
 pandas
 numpy
-matplotlib
 plotly
+openpyxl
+matplotlib
+streamlit
 gspread
 google-auth
-openpyxl
+pandas

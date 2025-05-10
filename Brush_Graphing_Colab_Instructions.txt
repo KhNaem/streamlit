@@ -1,0 +1,70 @@
+
+# STEP 1: Install dependencies
+!pip install gspread oauth2client plotly --quiet
+
+# STEP 2: Upload service account file
+from google.colab import files
+uploaded = files.upload()
+
+# STEP 3: Load libraries and authenticate
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import gspread
+from google.oauth2.service_account import Credentials
+
+SERVICE_ACCOUNT_FILE = 'mock_service_account.json'  # <-- เปลี่ยนชื่อถ้าคุณอัปโหลดไฟล์จริง
+
+creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+gc = gspread.authorize(creds)
+
+# STEP 4: ตั้งค่าชื่อชีตและจำนวนย้อนหลัง
+sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
+sheet = gc.open_by_url(sheet_url)
+selected_sheet = "Sheet7"
+count = 6  # จำนวนชีตย้อนหลัง
+
+# STEP 5: ดึงค่าความยาวปัจจุบัน
+ws = sheet.worksheet(selected_sheet)
+upper_current = [float(row[0]) if row and row[0] not in ["", "-"] else 0 for row in ws.get("F3:F34")]
+lower_current = [float(row[0]) if row and row[0] not in ["", "-"] else 0 for row in ws.get("C3:C34")]
+
+# STEP 6: โหลด Excel และคำนวณ avg rate
+xls = pd.ExcelFile(sheet_url + "/export?format=xlsx")
+sheets = xls.sheet_names[:count]
+brush_numbers = list(range(1, 33))
+ur, lr = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
+
+for s in sheets:
+    df = xls.parse(s, skiprows=1, header=None).apply(pd.to_numeric, errors='coerce')
+    try: h = float(xls.parse(s, header=None).iloc[0, 7])
+    except: continue
+    for i in brush_numbers:
+        cu, pu = df.iloc[i-1, 4], df.iloc[i-1, 5]
+        cl, pl = df.iloc[i-1, 1], df.iloc[i-1, 2]
+        if pd.notna(cu) and pd.notna(pu) and h > 0:
+            rate = (cu - pu) / h
+            if rate > 0: ur[i][s] = rate
+        if pd.notna(cl) and pd.notna(pl) and h > 0:
+            rate = (pl - cl) / h
+            if rate > 0: lr[i][s] = rate
+
+def avg_positive(rate_dict): return np.mean([v for v in rate_dict.values() if v > 0]) if rate_dict else 0
+avg_rate_upper = [avg_positive(ur[n]) for n in brush_numbers]
+avg_rate_lower = [avg_positive(lr[n]) for n in brush_numbers]
+time_hours = np.arange(0, 201, 10)
+
+# STEP 7: พล็อตกราฟ
+fig_upper = go.Figure()
+for i, (start, rate) in enumerate(zip(upper_current, avg_rate_upper)):
+    y = [start - rate*t for t in time_hours]
+    fig_upper.add_trace(go.Scatter(x=time_hours, y=y, name=f"Upper {i+1}", mode='lines'))
+fig_upper.update_layout(title="🔺 Upper Brush Length Over Time", xaxis_title="Hours", yaxis_title="mm")
+fig_upper.show()
+
+fig_lower = go.Figure()
+for i, (start, rate) in enumerate(zip(lower_current, avg_rate_lower)):
+    y = [start - rate*t for t in time_hours]
+    fig_lower.add_trace(go.Scatter(x=time_hours, y=y, name=f"Lower {i+1}", mode='lines', line=dict(dash='dot')))
+fig_lower.update_layout(title="🔻 Lower Brush Length Over Time", xaxis_title="Hours", yaxis_title="mm")
+fig_lower.show()
