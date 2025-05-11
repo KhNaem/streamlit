@@ -350,7 +350,6 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(page_title="📉 คาดการณ์แปรงถ่านหลัง 200 ชั่วโมง", layout="wide")
 st.title("📉 คาดการณ์ความยาวแปรงถ่านหลังใช้งาน 200 ชั่วโมง")
 
-# เชื่อมต่อ Google Sheet
 service_account_info = st.secrets["gcp_service_account"]
 creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
 gc = gspread.authorize(creds)
