@@ -341,13 +341,16 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
 
 import streamlit as st
+
+st.set_page_config(page_title="📉 คาดการณ์แปรงถ่านหลัง 200 ชั่วโมง", layout="wide")
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import gspread
 from google.oauth2.service_account import Credentials
 
-st.set_page_config(page_title="📉 คาดการณ์แปรงถ่านหลัง 200 ชั่วโมง", layout="wide")
+
 st.title("📉 คาดการณ์ความยาวแปรงถ่านหลังใช้งาน 200 ชั่วโมง")
 
 service_account_info = st.secrets["gcp_service_account"]
