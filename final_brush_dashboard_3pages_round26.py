@@ -344,9 +344,9 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     sheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ")
 
     selected_sheet = st.selectbox("📄 เลือก Sheet ปัจจุบัน", [ws.title for ws in sheet.worksheets()])
-    #count = st.number_input("📌 จำนวน Sheet ที่ใช้คำนวณ Rate", min_value=1, max_value=9, value=6)
+    count = st.number_input("📌 จำนวน Sheet ที่ใช้คำนวณ Rate", min_value=1, max_value=9, value=6)
     
-    count = int(selected_sheet.replace("Sheet", ""))
+    #count = int(selected_sheet.replace("Sheet", ""))
 
     ws = sheet.worksheet(selected_sheet)
     upper_current = [float(row[0]) if row and row[0] not in ["", "-"] else 0 for row in ws.get("F3:F34")]
