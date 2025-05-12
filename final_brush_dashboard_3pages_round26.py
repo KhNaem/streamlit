@@ -294,6 +294,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         #ลองแก้หน่อย
         #combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
         #st.dataframe(combined_df, use_container_width=True)
+        
+        combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
+
 
         combined_df.insert(0, "Brush No", range(1, len(combined_df) + 1))
         combined_df.set_index("Brush No", inplace=True)
