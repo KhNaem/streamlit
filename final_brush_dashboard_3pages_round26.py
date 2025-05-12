@@ -133,7 +133,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_count = st.number_input("📌 กรอกจำนวน Sheet ที่ต้องใช้ (มีทั้งหมด)", min_value=1, max_value=len(sheet_names), value=len(sheet_names))
     
     try:
-        xls = pd.ExcelFile(sheet_url)
+        xls = pd.ExcelFile(sheet_url, engine='openpyxl')
         sheet_names = sheet_names[:sheet_count]
         brush_numbers = list(range(1, 33))
         upper_rates, lower_rates = {n: {} for n in brush_numbers}, {n: {} for n in brush_numbers}
