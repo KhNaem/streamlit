@@ -232,8 +232,10 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     gc = gspread.authorize(creds)
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ")
 
-    editable_sheets = [ws.title for ws in sh.worksheets() if "Sheet" in ws.title]
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", editable_sheets)
+# ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
+    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
+
     ws = sh.worksheet(selected_sheet)
 
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
@@ -357,6 +359,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         
 
 # ------------------ PAGE 3 ------------------
+
+
 elif page == "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)":
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
