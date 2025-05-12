@@ -280,9 +280,16 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
 
     try:
-        
+        #คำหนดคำสั่ง
         selected_ws = sh.worksheet(selected_view_sheet)
+        
+        #ดึงค่ามาจาก google sheet
+        date_prev = selected_ws.acell("A2").value
+        date_curr = selected_ws.acell("B2").value        
         hour_val = selected_ws.acell("H1").value
+        
+        #เอาไปกรอกใน web
+        st.markdown(f"📆 วันที่ Previous: **`{date_prev}`** | วันที่ Current: **`{date_curr}`**")
         st.markdown(f"#### ⏱️ ชั่วโมงจาก `{selected_view_sheet}`: `{hour_val}` ชั่วโมง")
 
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
