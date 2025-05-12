@@ -22,10 +22,17 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
-    sheet_names = xls.sheet_names
+    
+    service_account_info = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ")
 
+    
+    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     num_sheets = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องการใช้ (สำหรับคำนวณ Avg Rate)", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:num_sheets]
+
     brush_numbers = list(range(1, 33))
 
     upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
