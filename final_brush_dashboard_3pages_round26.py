@@ -297,9 +297,10 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         upper_df = df.iloc[:, 4:6]
         upper_df.columns = ["Upper_Previous", "Upper_Current"]
         lower_df = df.iloc[:, 1:3]
-        lower_df.columns = ["Lower_Current", "Lower_Previous"]
+        lower_df.columns = ["Lower_Previous", "Lower_Current"]
         
-        lower_df[["Lower_Current", "Lower_Previous"]] = lower_df[["Lower_Previous", "Lower_Current"]]
+        #ลองสลับค่า
+        upper_df[["Upper_Current", "Upper_Previous"]] = upper_df[["Upper_Previous", "Upper_Current"]]
         # กรองเฉพาะค่าตัวเลข (drop non-numeric row)
         upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
         lower_df = lower_df[pd.to_numeric(lower_df["Lower_Current"], errors="coerce").notna()]
