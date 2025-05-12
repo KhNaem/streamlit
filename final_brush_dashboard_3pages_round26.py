@@ -299,7 +299,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         
         upper_df = df.iloc[:, 4:6]
-        upper_df.columns = ["Upper_Current", "Upper_Previous"]
+        upper_df.columns = ["Upper_Previous", "Upper_Current"]
         lower_df = df.iloc[:, 1:3]
         lower_df.columns = ["Lower_Previous", "Lower_Current"]
         
