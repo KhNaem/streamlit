@@ -27,7 +27,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/....")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx")
 
     sheet_names = [ws.title for ws in sh.worksheets() if ws.title.startswith("Sheet")]
     num_sheets = st.number_input("📉 เลือกจำนวน Sheet ที่ต้องการใช้ (เฉพาะที่มีอยู่จริง)", min_value=1, max_value=len(sheet_names), value=len(sheet_names))
