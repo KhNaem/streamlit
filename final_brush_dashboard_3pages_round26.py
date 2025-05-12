@@ -297,9 +297,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         upper_df = df.iloc[:, 4:6]
         upper_df.columns = ["Upper_Previous", "Upper_Current"]
         lower_df = df.iloc[:, 1:3]
-        lower_df.columns = ["Lower_Previous", "Lower_Current"]
+        lower_df.columns = ["Lower_Current", "Lower_Previous"]
         
-    
+        lower_df[["Lower_Current", "Lower_Previous"]] = lower_df[["Lower_Previous", "Lower_Current"]]
         # กรองเฉพาะค่าตัวเลข (drop non-numeric row)
         upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
         lower_df = lower_df[pd.to_numeric(lower_df["Lower_Current"], errors="coerce").notna()]
@@ -321,20 +321,20 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             y=combined_df["Upper_Current"], x=brush_labels,
-            mode='lines+markers', name='Upper Current'
-        ))
+            mode='lines+markers', name='Upper Current'))
+        
         fig.add_trace(go.Scatter(
             y=combined_df["Upper_Previous"], x=brush_labels,
-            mode='lines+markers', name='Upper Previous'
-        ))
+            mode='lines+markers', name='Upper Previous'))
+        
         fig.add_trace(go.Scatter(
             y=combined_df["Lower_Current"], x=brush_labels,
-            mode='lines+markers', name='Lower Current', line=dict(dash='dot')
-        ))
+            mode='lines+markers', name='Lower Current', line=dict(dash='dot')))
+        
         fig.add_trace(go.Scatter(
             y=combined_df["Lower_Previous"], x=brush_labels,
-            mode='lines+markers', name='Lower Previous', line=dict(dash='dot')
-        ))
+            mode='lines+markers', name='Lower Previous', line=dict(dash='dot')))
+        
         fig.update_layout(
             xaxis_title='Brush Number',
             yaxis_title='mm',
