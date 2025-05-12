@@ -128,12 +128,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 #----------------ลองแก้ดู----------------------------------------
 
-    #sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.startswith("Sheet")]
-    sheet_count = st.number_input("📌 กรอกจำนวน Sheet ที่ต้องใช้ (มีทั้งหมด)", min_value=1, max_value=len(sheet_names), value=len(sheet_names))
+    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
     
     try:
-        xls = pd.ExcelFile(sheet_url, engine='openpyxl')
+        xls = pd.ExcelFile(sheet_url)
         sheet_names = sheet_names[:sheet_count]
         brush_numbers = list(range(1, 33))
         upper_rates, lower_rates = {n: {} for n in brush_numbers}, {n: {} for n in brush_numbers}
