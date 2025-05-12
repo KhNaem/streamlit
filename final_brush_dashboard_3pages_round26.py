@@ -295,7 +295,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         
         upper_df = df.iloc[:, 4:6]
-        upper_df.columns = ["Upper_Previous", "Upper_Current"]
+        upper_df.columns = ["Upper_Current", "Upper_Previous"]
         lower_df = df.iloc[:, 1:3]
         lower_df.columns = ["Lower_Previous", "Lower_Current"]
         
@@ -309,7 +309,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         #combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
         #st.dataframe(combined_df, use_container_width=True)
         
-        combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
+        combined_df = pd.concat([lower_df.reset_index(drop=True), upper_df.reset_index(drop=True)], axis=1)
         combined_df.insert(0, "Brush No", range(1, len(combined_df) + 1))
         combined_df.set_index("Brush No", inplace=True)
         st.dataframe(combined_df, use_container_width=True, height=700)
