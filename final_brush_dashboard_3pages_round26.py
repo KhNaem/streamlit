@@ -22,20 +22,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
-    
-    # เพื่อ sh
-    service_account_info = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-    gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
-    sh = gc.open_by_url(sheet_url)
+    sheet_names = xls.sheet_names
 
-
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.startswith("Sheet")]
-    num_sheets = st.number_input("📉 เลือกจำนวน Sheet ที่ต้องการใช้ (เฉพาะที่มีอยู่จริง)", min_value=1, max_value=len(sheet_names), value=len(sheet_names))
+    num_sheets = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องการใช้ (สำหรับคำนวณ Avg Rate)", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:num_sheets]
-        
-    
     brush_numbers = list(range(1, 33))
 
     upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
@@ -127,9 +117,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
 #----------------ลองแก้ดู----------------------------------------
-
     sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
-    
     try:
         xls = pd.ExcelFile(sheet_url)
         sheet_names = [f"Sheet{i}" for i in range(1, sheet_count + 1)]
@@ -224,6 +212,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาด: {e}")
+
 
         
     
