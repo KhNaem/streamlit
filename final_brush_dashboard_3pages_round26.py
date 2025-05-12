@@ -278,7 +278,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
     xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ/export?format=xlsx")
-    sheet_options = [s for s in xls.sheet_names if "Sheet" in s and "Sheet8" not in s]
+   
+    # 🔁 เปลี่ยนจาก pandas มาใช้ gspread โดยตรงเพื่อได้รายชื่อชีตจริง
+    sheet_options = [ws.title for ws in sh.worksheets() if ws.title.startswith("Sheet")]
     selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
 
     try:
