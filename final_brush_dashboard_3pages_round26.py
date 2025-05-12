@@ -347,7 +347,8 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     #count = st.number_input("📌 จำนวน Sheet ที่ใช้คำนวณ Rate", min_value=1, max_value=9, value=6)
     
     count = selected_sheet
-    
+    sheets = [f"Sheet{i}" for i in range(1, count + 1)]  # จะได้ ['Sheet1', 'Sheet2', ..., 'SheetN']
+
 
     ws = sheet.worksheet(selected_sheet)
     upper_current = [float(row[0]) if row and row[0] not in ["", "-"] else 0 for row in ws.get("F3:F34")]
