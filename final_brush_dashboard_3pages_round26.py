@@ -302,8 +302,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         #ลองสลับค่า
         upper_df[["Upper_Current", "Upper_Previous"]] = upper_df[["Upper_Previous", "Upper_Current"]]
         # กรองเฉพาะค่าตัวเลข (drop non-numeric row)
-        upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
         lower_df = lower_df[pd.to_numeric(lower_df["Lower_Current"], errors="coerce").notna()]
+        upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
 
         #ลองแก้หน่อย
         #combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
