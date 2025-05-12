@@ -132,7 +132,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     try:
         xls = pd.ExcelFile(sheet_url)
-        sheet_names = sheet_names[:sheet_count]
+        sheet_names = [f"Sheet{i}" for i in range(1, sheet_count + 1)]
         brush_numbers = list(range(1, 33))
         upper_rates, lower_rates = {n: {} for n in brush_numbers}, {n: {} for n in brush_numbers}
 
