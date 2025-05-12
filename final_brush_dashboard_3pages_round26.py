@@ -280,8 +280,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
 
     try:
-        df = xls.parse(selected_view_sheet, skiprows=1, header=None)
+        
+        selected_ws = sh.worksheet(selected_view_sheet)
+        hour_val = selected_ws.acell("H1").value
+        st.markdown(f"#### ⏱️ ชั่วโมงจาก `{selected_view_sheet}`: `{hour_val}` ชั่วโมง")
 
+        df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         upper_df = df.iloc[:, 4:6]
         upper_df.columns = ["Upper_Current", "Upper_Previous"]
         lower_df = df.iloc[:, 1:3]
