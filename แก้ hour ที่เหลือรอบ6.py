@@ -115,7 +115,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         use_container_width=True
     )
 
-    st.markdown("✅ สี **เขียว** = ค่า Rate คงที่แล้ว❌ สี **แดง** = ยังไม่คงที่")
+    st.markdown("✅ สี **เขียว** = ค่า Rate คงที่แล้ว
+
+❌ สี **แดง** = ยังไม่คงที่")
 
     brush_numbers = list(range(1, 33))
     fig_combined = go.Figure()
@@ -136,3 +138,4 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     fig_lower.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
     st.subheader("🔻 กราฟ Avg Rate - Lower")
     st.plotly_chart(fig_lower, use_container_width=True)
+
