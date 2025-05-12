@@ -291,8 +291,16 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         upper_df = upper_df[pd.to_numeric(upper_df["Upper_Current"], errors="coerce").notna()]
         lower_df = lower_df[pd.to_numeric(lower_df["Lower_Current"], errors="coerce").notna()]
 
-        combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
-        st.dataframe(combined_df, use_container_width=True)
+        #ลองแก้หน่อย
+        #combined_df = pd.concat([upper_df.reset_index(drop=True), lower_df.reset_index(drop=True)], axis=1)
+        #st.dataframe(combined_df, use_container_width=True)
+
+        combined_df.insert(0, "Brush No", range(1, len(combined_df) + 1))
+        combined_df.set_index("Brush No", inplace=True)
+
+        st.dataframe(combined_df, use_container_width=True, height=700)
+
+
 
         st.markdown("### 📊 กราฟรวม Upper และ Lower (Current vs Previous)")
         brush_labels = [f"Brush {i+1}" for i in range(len(combined_df))]
