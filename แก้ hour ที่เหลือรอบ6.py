@@ -48,7 +48,7 @@ for sheet in selected_sheets:
             continue
 
 # Step 2: Check for stable (fixed) rate logic
-def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.15):
+def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5):
     previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
