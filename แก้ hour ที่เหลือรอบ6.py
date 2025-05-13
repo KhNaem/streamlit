@@ -53,11 +53,13 @@ def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
         percent_diff = abs(new_rate - avg_rate) / avg_rate
+        print(f"new_rate: {new_rate}, avg_rate: {avg_rate}, percent_diff: {percent_diff}")  # print check
         if percent_diff <= threshold:
-            return round(avg_rate, 6), True
+            return round(avg_rate, 6), True  # If percentage difference is below 50%, mark as stable
     combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
     final_avg = sum(combined) / len(combined) if combined else 0
     return round(final_avg, 6), False
+
 
 def calc_avg_with_flag(rates_dict, rate_fixed_set):
     df = pd.DataFrame.from_dict(rates_dict, orient='index').fillna(0)
