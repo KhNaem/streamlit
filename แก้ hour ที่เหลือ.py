@@ -68,13 +68,14 @@ def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_d
 
 def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict):
     df = pd.DataFrame.from_dict(rates_dict, orient='index').fillna(0)
+    df = df.reindex(range(1, 33))  # ensure all 1–32 always shown
     avg_col = []
     for i, row in df.iterrows():
         values = row[row > 0].tolist()
         if len(values) >= 6:
             prev = values[:-1]
             new = values[-1]
-            sheet_name = row[row > 0].index[-1]
+            sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
             avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
             avg_col.append(avg)
             if fixed:
@@ -89,7 +90,7 @@ lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_m
 upper_df["Avg Rate (Upper)"] = upper_avg
 lower_df["Avg Rate (Lower)"] = lower_avg
 
-# Step 3: Styling output
+# Step 3: Styling output (yellow text only)
 def highlight_fixed_rate_row(row, column_name, fixed_set, yellow_mark_dict):
     styles = []
     for col in row.index:
@@ -99,7 +100,7 @@ def highlight_fixed_rate_row(row, column_name, fixed_set, yellow_mark_dict):
             else:
                 styles.append("color: red; font-weight: bold")
         elif yellow_mark_dict.get(row.name) == col:
-            styles.append("background-color: yellow; color: black; font-weight: bold")
+            styles.append("color: yellow; font-weight: bold")
         else:
             styles.append("")
     return styles
@@ -113,5 +114,5 @@ styled_lower = lower_df.style.apply(lambda row: highlight_fixed_rate_row(row, "A
 st.write(styled_lower)
 
 st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
-st.markdown("🟨 **พื้นหลังสีเหลือง** = ค่า Rate ที่ทำให้ค่าเฉลี่ยกลายเป็น 'คงที่'")
+st.markdown("🟨 **ตัวอักษรสีเหลือง** = ค่า Rate ที่ทำให้ค่าเฉลี่ยกลายเป็น 'คงที่'")
 st.markdown("🔴 **สีแดง** = ค่า Rate ยังไม่คงที่")
