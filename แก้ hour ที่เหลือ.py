@@ -26,7 +26,13 @@ upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_n
 rate_fixed_upper = set()
 rate_fixed_lower = set()
 
-# Step 1: Calculate rates per sheet
+# เพิ่มการเลือก Sheet ทั้งหมด
+sheet_names = [ws.title for ws in sh.worksheets()]
+
+# แก้ไขการเลือกชีตไม่ตัด Sheet1 ทิ้ง
+selected_sheets = sheet_names[:sheet_count]
+
+# Step 1: Calculate rates per sheet (ไม่ตัด Sheet1)
 for sheet in selected_sheets:
     df_raw = xls.parse(sheet, header=None)
     try:
@@ -48,8 +54,11 @@ for sheet in selected_sheets:
         except:
             continue
 
+# หลังจากนี้จะไม่ตัด Sheet1 ทิ้ง และคำนวณค่าทุกชีตที่เลือกให้แสดงผลในตาราง
+
+
 # Step 2: Check for stable (fixed) rate logic
-def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.15):
+def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5):
     previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
