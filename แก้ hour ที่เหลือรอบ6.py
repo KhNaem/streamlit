@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Function to determine final rate
-def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.05):
+def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.15):
     # Filter out previous rates that are NaN or non-positive
     previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
     
