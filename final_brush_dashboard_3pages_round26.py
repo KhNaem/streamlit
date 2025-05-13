@@ -199,7 +199,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
 
-        color_upper = ['black' if h < 200 else 'red' for h in hour_upper]
+        color_upper = ['black' if h < 500 else 'red' for h in hour_upper]
         bars1 = ax1.bar(brush_numbers, hour_upper, color=color_upper)
         ax1.set_title("Remaining Hours to Reach 35mm - Upper")
         ax1.set_ylabel("Hours")
@@ -207,7 +207,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         for bar, val in zip(bars1, hour_upper):
             ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 10, f"{int(val)}", ha='center', fontsize=8)
 
-        color_lower = ['black' if h < 800 else 'darkred' for h in hour_lower]
+        color_lower = ['black' if h < 500 else 'deepskyblue' for h in hour_lower]
         bars2 = ax2.bar(brush_numbers, hour_lower, color=color_lower)
         ax2.set_title("Remaining Hours to Reach 35mm - Lower")
         ax2.set_ylabel("Hours")
