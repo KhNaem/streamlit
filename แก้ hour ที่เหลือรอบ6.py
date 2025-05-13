@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,19 +14,9 @@ gc = gspread.authorize(creds)
 sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
 sh = gc.open_by_url(sheet_url)
 
-# Display sheet names to ensure connection is working
-sheet_names = [ws.title for ws in sh.worksheets()]
-st.write("Available Sheets:", sheet_names)
-
-# Select number of sheets to use
+sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
 sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
 selected_sheets = sheet_names[:sheet_count]
-
-# Check if selected sheets are not empty
-if selected_sheets:
-    st.write(f"Using sheets: {selected_sheets}")
-else:
-    st.write("No sheets selected.")
 
 sheet_url_export = f"{sheet_url}/export?format=xlsx"
 xls = pd.ExcelFile(sheet_url_export)
@@ -40,10 +31,8 @@ for sheet in selected_sheets:
     df_raw = xls.parse(sheet, header=None)
     try:
         hours = float(df_raw.iloc[0, 7])
-    except Exception as e:
-        st.write(f"Error loading sheet {sheet}: {e}")
+    except:
         continue
-    
     df = xls.parse(sheet, skiprows=2, header=None)
     for i in range(32):
         try:
@@ -56,8 +45,7 @@ for sheet in selected_sheets:
                     upper_rates[i+1][sheet] = upper_rate
                 if lower_rate > 0:
                     lower_rates[i+1][sheet] = lower_rate
-        except Exception as e:
-            st.write(f"Error processing row {i} in sheet {sheet}: {e}")
+        except:
             continue
 
 # Step 2: Check for stable (fixed) rate logic
@@ -66,11 +54,11 @@ def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
         percent_diff = abs(new_rate - avg_rate) / avg_rate
-        if percent_diff <= threshold:
-            return round(avg_rate, 6), True
+        if percent_diff <= threshold:  # If percentage difference is less than 50%, rate is stable
+            return round(avg_rate, 6), True  # This rate is stable and should be considered fixed
     combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
     final_avg = sum(combined) / len(combined) if combined else 0
-    return round(final_avg, 6), False
+    return round(final_avg, 6), False  # Not stable yet
 
 def calc_avg_with_flag(rates_dict, rate_fixed_set):
     df = pd.DataFrame.from_dict(rates_dict, orient='index').fillna(0)
@@ -118,12 +106,3 @@ st.write(styled_lower)
 st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
 st.markdown("🟨 **สีเหลือง** = ค่าที่ถูกตัดสินว่า 'คงที่' แล้ว ใช้ค่านี้ถาวรในตาราง")
 st.markdown("🔴 **สีแดง** = ค่า Rate ยังไม่คงที่")
-"""
-
-# Save the updated code as a .py file
-updated_code_path = '/mnt/data/final_updated_code_with_debug.py'
-
-with open(updated_code_path, 'w') as file:
-    file.write(updated_code)
-
-updated_code_path  # return the file path to the user
