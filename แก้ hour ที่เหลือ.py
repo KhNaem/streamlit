@@ -14,7 +14,14 @@ gc = gspread.authorize(creds)
 sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
 sh = gc.open_by_url(sheet_url)
 
-sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+# Get all sheet names
+sheet_names = [ws.title for ws in sh.worksheets()]
+
+# Ensure Sheet1 is always included first
+if "Sheet1" in sheet_names:
+    sheet_names.remove("Sheet1")
+    sheet_names = ["Sheet1"] + sheet_names
+
 sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
 selected_sheets = sheet_names[:sheet_count]
 
@@ -26,13 +33,7 @@ upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_n
 rate_fixed_upper = set()
 rate_fixed_lower = set()
 
-# เพิ่มการเลือก Sheet ทั้งหมด
-sheet_names = [ws.title for ws in sh.worksheets()]
-
-# แก้ไขการเลือกชีตไม่ตัด Sheet1 ทิ้ง
-selected_sheets = sheet_names[:sheet_count]
-
-# Step 1: Calculate rates per sheet (ไม่ตัด Sheet1)
+# Step 1: Calculate rates per sheet
 for sheet in selected_sheets:
     df_raw = xls.parse(sheet, header=None)
     try:
@@ -45,17 +46,12 @@ for sheet in selected_sheets:
             uc, up = df.iloc[i, 4], df.iloc[i, 5]
             lc, lp = df.iloc[i, 2], df.iloc[i, 1]
             if hours > 0:
-                upper_rate = (uc - up) / hours if uc > up else np.nan
-                lower_rate = (lp - lc) / hours if lp > lc else np.nan
-                if upper_rate > 0:
-                    upper_rates[i+1][sheet] = upper_rate
-                if lower_rate > 0:
-                    lower_rates[i+1][sheet] = lower_rate
+                upper_rate = (uc - up) / hours if uc > up else 0
+                lower_rate = (lp - lc) / hours if lp > lc else 0
+                upper_rates[i+1][sheet] = upper_rate
+                lower_rates[i+1][sheet] = lower_rate
         except:
             continue
-
-# หลังจากนี้จะไม่ตัด Sheet1 ทิ้ง และคำนวณค่าทุกชีตที่เลือกให้แสดงผลในตาราง
-
 
 # Step 2: Check for stable (fixed) rate logic
 def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5):
@@ -64,10 +60,10 @@ def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5
         avg_rate = sum(previous_rates) / len(previous_rates)
         percent_diff = abs(new_rate - avg_rate) / avg_rate
         if percent_diff <= threshold:
-            return round(avg_rate, 6), True  # Rate is stable and should be considered fixed
+            return round(avg_rate, 6), True
     combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
     final_avg = sum(combined) / len(combined) if combined else 0
-    return round(final_avg, 6), False  # Rate is not stable, calculate a new rate
+    return round(final_avg, 6), False
 
 def calc_avg_with_flag(rates_dict, rate_fixed_set):
     df = pd.DataFrame.from_dict(rates_dict, orient='index').fillna(0)
@@ -82,7 +78,7 @@ def calc_avg_with_flag(rates_dict, rate_fixed_set):
             if fixed:
                 rate_fixed_set.add(i)
         else:
-            avg_col.append(np.mean(values))
+            avg_col.append(round(np.mean(values), 6) if values else 0.000000)
     return df, avg_col
 
 upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper)
@@ -97,9 +93,9 @@ def highlight_fixed_rate_row(row, column_name, fixed_set):
     for col in row.index:
         if col == column_name:
             if row.name in fixed_set:
-                styles.append("background-color: green; color: black; font-weight: bold")  # Green for fixed rates
+                styles.append("background-color: green; color: black; font-weight: bold")
             else:
-                styles.append("color: red; font-weight: bold")  # Red for non-fixed rates
+                styles.append("color: red; font-weight: bold")
         else:
             styles.append("")
     return styles
@@ -113,5 +109,4 @@ styled_lower = lower_df.style.apply(lambda row: highlight_fixed_rate_row(row, "A
 st.write(styled_lower)
 
 st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
-st.markdown("🟨 **สีเหลือง** = ค่าที่ถูกตัดสินว่า 'คงที่' แล้ว ใช้ค่านี้ถาวรในตาราง")
 st.markdown("🔴 **สีแดง** = ค่า Rate ยังไม่คงที่")
