@@ -1,135 +1,108 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 import gspread
 from google.oauth2.service_account import Credentials
 
-# การตั้งค่าหน้าแอป Streamlit
 st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
-# เลือกหน้าใน sidebar
-page = st.sidebar.radio("📂 เลือกหน้า", [
-    "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ",
-    "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
-    "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"
-])
+# Setup credentials and spreadsheet access
+service_account_info = st.secrets["gcp_service_account"]
+creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+gc = gspread.authorize(creds)
+sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
+sh = gc.open_by_url(sheet_url)
 
-# ------------------ PAGE 1 ------------------
-if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
-    st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
+sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
+selected_sheets = sheet_names[:sheet_count]
 
-    # กำหนดข้อมูล Google Sheets
-    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url)
-    
-    service_account_info = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-    gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ")
+sheet_url_export = f"{sheet_url}/export?format=xlsx"
+xls = pd.ExcelFile(sheet_url_export)
 
-    # แสดงชื่อชีตที่สามารถเลือก
-    sheet_names = [ws.title for ws in sh.worksheets()]
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
-    selected_sheets = sheet_names[:sheet_count]
+brush_numbers = list(range(1, 33))
+upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
+rate_fixed_upper = set()
+rate_fixed_lower = set()
 
-    # กำหนด Brush Numbers และเตรียมที่เก็บข้อมูล
-    brush_numbers = list(range(1, 33))
-    upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
-
-    # คำนวณ Rate ของแต่ละ Sheet
-    for sheet in selected_sheets:
-        df_raw = xls.parse(sheet, header=None)
+# Step 1: Calculate rates per sheet
+for sheet in selected_sheets:
+    df_raw = xls.parse(sheet, header=None)
+    try:
+        hours = float(df_raw.iloc[0, 7])
+    except:
+        continue
+    df = xls.parse(sheet, skiprows=1, header=None)
+    for i in range(32):
         try:
-            hours = float(df_raw.iloc[0, 7])  # จำนวนชั่วโมง
+            uc, up = df.iloc[i, 4], df.iloc[i, 5]
+            lc, lp = df.iloc[i, 2], df.iloc[i, 1]
+            if hours > 0:
+                upper_rate = (uc - up) / hours if uc > up else np.nan
+                lower_rate = (lp - lc) / hours if lp > lc else np.nan
+                if upper_rate > 0:
+                    upper_rates[i+1][sheet] = upper_rate
+                if lower_rate > 0:
+                    lower_rates[i+1][sheet] = lower_rate
         except:
             continue
-        df = xls.parse(sheet, skiprows=1, header=None)
 
-        lower_df_sheet = df.iloc[:, 0:3]
-        lower_df_sheet.columns = ["No_Lower", "Lower_Previous", "Lower_Current"]
-        lower_df_sheet = lower_df_sheet.dropna().apply(pd.to_numeric, errors='coerce')
+# Step 2: Check for stable (fixed) rate logic
+def determine_final_rate(previous_rates, new_rate, min_required=5, threshold=0.5):
+    previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
+    if len(previous_rates) >= min_required:
+        avg_rate = sum(previous_rates) / len(previous_rates)
+        percent_diff = abs(new_rate - avg_rate) / avg_rate
+        if percent_diff <= threshold:
+            return round(avg_rate, 6), True  # Rate is stable and should be considered fixed
+    combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
+    final_avg = sum(combined) / len(combined) if combined else 0
+    return round(final_avg, 6), False  # Rate is not stable, calculate a new rate
 
-        upper_df_sheet = df.iloc[:, 4:6]
-        upper_df_sheet.columns = ["Upper_Current", "Upper_Previous"]
-        upper_df_sheet = upper_df_sheet.dropna().apply(pd.to_numeric, errors='coerce')
-        upper_df_sheet["No_Upper"] = range(1, len(upper_df_sheet) + 1)
+def calc_avg_with_flag(rates_dict, rate_fixed_set):
+    df = pd.DataFrame.from_dict(rates_dict, orient='index').fillna(0)
+    avg_col = []
+    for i, row in df.iterrows():
+        values = row[row > 0].tolist()
+        if len(values) >= 6:
+            prev = values[:-1]
+            new = values[-1]
+            avg, fixed = determine_final_rate(prev, new)
+            avg_col.append(avg)
+            if fixed:
+                rate_fixed_set.add(i)
+        else:
+            avg_col.append(np.mean(values))
+    return df, avg_col
 
-        # คำนวณ Upper Rate และ Lower Rate
-        for n in brush_numbers:
-            u_row = upper_df_sheet[upper_df_sheet["No_Upper"] == n]
-            if not u_row.empty:
-                diff = u_row.iloc[0]["Upper_Current"] - u_row.iloc[0]["Upper_Previous"]
-                rate = diff / hours if hours > 0 else np.nan
-                upper_rates[n][f"Upper_{sheet}"] = rate if rate > 0 else np.nan
+upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper)
+lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower)
 
-            l_row = lower_df_sheet[lower_df_sheet["No_Lower"] == n]
-            if not l_row.empty:
-                diff = l_row.iloc[0]["Lower_Previous"] - l_row.iloc[0]["Lower_Current"]
-                rate = diff / hours if hours > 0 else np.nan
-                lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else np.nan
+upper_df["Avg Rate (Upper)"] = upper_avg
+lower_df["Avg Rate (Lower)"] = lower_avg
 
-    # คำนวณค่าเฉลี่ยในแต่ละ Row
-    def avg_positive(row):
-        valid = row[row > 0]
-        return valid.sum() / len(valid) if len(valid) > 0 else np.nan
+# Step 3: Styling output
+def highlight_fixed_rate_row(row, column_name, fixed_set):
+    styles = []
+    for col in row.index:
+        if col == column_name:
+            if row.name in fixed_set:
+                styles.append("background-color: green; color: black; font-weight: bold")  # Green for fixed rates
+            else:
+                styles.append("color: red; font-weight: bold")  # Red for non-fixed rates
+        else:
+            styles.append("")
+    return styles
 
-    upper_df = pd.DataFrame.from_dict(upper_rates, orient='index').fillna(0)
-    lower_df = pd.DataFrame.from_dict(lower_rates, orient='index').fillna(0)
-    upper_df["Avg Rate (Upper)"] = upper_df.apply(avg_positive, axis=1)
-    lower_df["Avg Rate (Lower)"] = lower_df.apply(avg_positive, axis=1)
+st.subheader("📋 ตาราง Avg Rate - Upper")
+styled_upper = upper_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", rate_fixed_upper), axis=1).format("{:.6f}")
+st.write(styled_upper)
 
-    # เตรียมข้อมูลสำหรับกราฟ
-    avg_rate_upper = upper_df["Avg Rate (Upper)"].tolist()[:32]
-    avg_rate_lower = lower_df["Avg Rate (Lower)"].tolist()[:32]
+st.subheader("📋 ตาราง Avg Rate - Lower")
+styled_lower = lower_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Lower)", rate_fixed_lower), axis=1).format("{:.6f}")
+st.write(styled_lower)
 
-    # คำนวณชั่วโมงที่เหลือ
-    if "Sheet7" in xls.sheet_names:
-        df_sheet7 = xls.parse("Sheet7", header=None)
-        upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
-        lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
-    else:
-        st.error("❌ ไม่พบ Sheet7 สำหรับค่าสภาพปัจจุบัน")
-        st.stop()
-
-    def calculate_hours_safe(current, rate):
-        return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
-
-    hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
-    hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
-
-    # แสดงผลข้อมูลตาราง
-    st.subheader("📋 ตาราง Avg Rate - Upper")
-    def style_upper(val):
-        return 'color: red; font-weight: bold' if isinstance(val, float) and val > 0 else ''
-    st.dataframe(upper_df.style.applymap(style_upper, subset=["Avg Rate (Upper)"]).format("{:.6f}"), use_container_width=True)
-
-    st.subheader("📋 ตาราง Avg Rate - Lower")
-    def style_lower(val):
-        return 'color: red; font-weight: bold' if isinstance(val, float) and val > 0 else ''
-    st.dataframe(lower_df.style.applymap(style_lower, subset=["Avg Rate (Lower)"]).format("{:.6f}"), use_container_width=True)
-
-    # กราฟรวม Avg Rate
-    st.subheader("📊 กราฟรวม Avg Rate")
-    fig_combined = go.Figure()
-    fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_upper, mode='lines+markers+text', name='Upper Avg Rate', line=dict(color='red'), text=[str(i) for i in brush_numbers], textposition='top center'))
-    fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_lower, mode='lines+markers+text', name='Lower Avg Rate', line=dict(color='deepskyblue'), text=[str(i) for i in brush_numbers], textposition='top center'))
-    fig_combined.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
-    st.plotly_chart(fig_combined, use_container_width=True)
-
-    # กราฟเฉพาะ Upper
-    st.subheader("🔺 กราฟ Avg Rate - Upper")
-    fig_upper = go.Figure()
-    fig_upper.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_upper, mode='lines+markers+text', name='Upper Avg Rate', line=dict(color='red'), text=[str(i) for i in brush_numbers], textposition='top center'))
-    fig_upper.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
-    st.plotly_chart(fig_upper, use_container_width=True)
-
-    # กราฟเฉพาะ Lower
-    st.subheader("🔻 กราฟ Avg Rate - Lower")
-    fig_lower = go.Figure()
-    fig_lower.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_lower, mode='lines+markers+text', name='Lower Avg Rate', line=dict(color='deepskyblue'), text=[str(i) for i in brush_numbers], textposition='top center'))
-    fig_lower.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
-    st.plotly_chart(fig_lower, use_container_width=True)
-
-# ----------------------------------- END PAGE 1 -----------------------------------
+st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
+st.markdown("🟨 **สีเหลือง** = ค่าที่ถูกตัดสินว่า 'คงที่' แล้ว ใช้ค่านี้ถาวรในตาราง")
+st.markdown("🔴 **สีแดง** = ค่า Rate ยังไม่คงที่")
