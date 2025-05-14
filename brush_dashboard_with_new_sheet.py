@@ -64,7 +64,7 @@ for sheet in selected_sheets:
             lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 # Step 2: Check for stable (fixed) rate logic
-def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
+def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.05):
     previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
