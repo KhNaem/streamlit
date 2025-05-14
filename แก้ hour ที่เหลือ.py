@@ -11,7 +11,7 @@ st.set_page_config(page_title="Brush Dashboard", layout="wide")
 service_account_info = st.secrets["gcp_service_account"]
 creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
 gc = gspread.authorize(creds)
-sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
+sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
 sh = gc.open_by_url(sheet_url)
 
 sheet_names = [ws.title for ws in sh.worksheets()]
@@ -64,7 +64,7 @@ for sheet in selected_sheets:
             lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 # Step 2: Check for stable (fixed) rate logic
-def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.05):
+def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.5):
     previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
     if len(previous_rates) >= min_required:
         avg_rate = sum(previous_rates) / len(previous_rates)
