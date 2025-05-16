@@ -414,7 +414,20 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         st.error(f"❌ ไม่สามารถโหลดข้อมูลจากชีตนี้ได้: {e}")
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 # ------------------ PAGE 3 ------------------
+
+
+
 
 
 elif page == "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)":
@@ -465,9 +478,51 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     def avg_positive(row_dict):
         values = [v for v in row_dict.values() if pd.notna(v) and v > 0]
         return sum(values) / len(values) if values else np.nan
+    
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
+        previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
+        if len(previous_rates) >= min_required:
+            avg_rate = sum(previous_rates) / len(previous_rates)
+            percent_diff = abs(new_rate - avg_rate) / avg_rate
+            if percent_diff <= threshold:
+                mark_dict[row_index] = sheet_name
+                return round(avg_rate, 6), True
+        combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
+        final_avg = sum(combined) / len(combined) if combined else 0
+        return round(final_avg, 6), False
 
-    avg_rate_upper = [avg_positive(upper_rates[n]) for n in brush_numbers]
-    avg_rate_lower = [avg_positive(lower_rates[n]) for n in brush_numbers]
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict):
+        df = pd.DataFrame.from_dict(rates_dict, orient='index')
+        df = df.reindex(range(1, 33)).fillna(0)
+        avg_col = []
+        for i, row in df.iterrows():
+            values = row[row > 0].tolist()
+            if len(values) >= 6:
+                prev = values[:-1]
+                new = values[-1]
+                sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
+                avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
+                avg_col.append(avg)
+                if fixed:
+                    rate_fixed_set.add(i)
+            else:
+                avg_col.append(round(np.mean(values), 6) if values else 0.000000)
+        return df, avg_col
+    
+
+    rate_fixed_upper = set()
+    rate_fixed_lower = set()
+    yellow_mark_upper = {}
+    yellow_mark_lower = {}
+
+    _, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
+    _, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
+
+    avg_rate_upper = upper_avg
+    avg_rate_lower = lower_avg
+
+
+ 
 
     # ใช้ current จาก sheet ล่าสุด เช่น Sheet{sheet_count}
     df_current = xls.parse(f"Sheet{sheet_count}", header=None, skiprows=2)
