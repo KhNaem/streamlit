@@ -25,7 +25,7 @@ sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที�
 selected_sheets = sheet_names[:sheet_count]
 
 sheet_url_export = f"{sheet_url}/export?format=xlsx"
-xls = pd.ExcelFile(sheet_url_export)
+xls = pd.ExcelFile(sheet_url_export, engine='openpyxl')
 
 brush_numbers = list(range(1, 33))
 upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
