@@ -441,7 +441,10 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     
 
     sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
-    sheet_names = [f"Sheet{i}" for i in range(1, sheet_count + 1)]
+    # ดึงชื่อชีตจริงจากไฟล์
+    all_sheet_names = xls.sheet_names
+    sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
+
     brush_numbers = list(range(1, 33))
     upper_rates, lower_rates = {n: {} for n in brush_numbers}, {n: {} for n in brush_numbers}
 
