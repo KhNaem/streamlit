@@ -35,8 +35,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:sheet_count]
 
+    import requests
+    from io import BytesIO
+
     sheet_url_export = f"{sheet_url}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url_export, engine='openpyxl')
+    response = requests.get(sheet_url_export)
+    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
 
     brush_numbers = list(range(1, 33))
     upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
