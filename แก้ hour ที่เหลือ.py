@@ -144,8 +144,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
 
-    avg_rate_upper = upper_df["Avg Rate (Upper)"].tolist()[:32]
-    avg_rate_lower = lower_df["Avg Rate (Lower)"].tolist()[:32]
+    avg_rate_upper = upper_avg
+    avg_rate_lower = lower_avg
+    
 
     if "Sheet7" in xls.sheet_names:
             df_sheet7 = xls.parse("Sheet7", header=None)
