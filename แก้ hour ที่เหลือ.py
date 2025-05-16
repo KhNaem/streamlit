@@ -145,9 +145,25 @@ def calculate_hours_safe(current, rate):
 hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
 hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
 
+
+
 st.subheader("📊 กราฟรวม Avg Rate")
 fig_combined = go.Figure()
 fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_upper, mode='lines+markers+text', name='Upper Avg Rate', line=dict(color='red'), text=[str(i) for i in brush_numbers], textposition='top center'))
 fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_lower, mode='lines+markers+text', name='Lower Avg Rate', line=dict(color='deepskyblue'), text=[str(i) for i in brush_numbers], textposition='top center'))
 fig_combined.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
 st.plotly_chart(fig_combined, use_container_width=True)
+
+
+
+st.subheader("🔺 กราฟ Avg Rate - Upper")
+fig_upper = go.Figure()
+fig_upper.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_upper, mode='lines+markers+text', name='Upper Avg Rate', line=dict(color='red'), text=[str(i) for i in brush_numbers], textposition='top center'))
+fig_upper.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
+st.plotly_chart(fig_upper, use_container_width=True)
+
+st.subheader("🔻 กราฟ Avg Rate - Lower")
+fig_lower = go.Figure()
+fig_lower.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_lower, mode='lines+markers+text', name='Lower Avg Rate', line=dict(color='deepskyblue'), text=[str(i) for i in brush_numbers], textposition='top center'))
+fig_lower.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
+st.plotly_chart(fig_lower, use_container_width=True)
