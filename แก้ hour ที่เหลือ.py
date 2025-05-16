@@ -277,6 +277,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาด: {e}")
+        
+    st.session_state.upper_avg = upper_avg
+    st.session_state.lower_avg = lower_avg
 
 # --------------------------------------------------- PAGE 2 -------------------------------------------------
 elif page == "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม":
@@ -513,16 +516,9 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         return df, avg_col
     
 
-    rate_fixed_upper = set()
-    rate_fixed_lower = set()
-    yellow_mark_upper = {}
-    yellow_mark_lower = {}
+    avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
+    avg_rate_lower = st.session_state.get("lower_avg", [0]*32)
 
-    _, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
-    _, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
-
-    avg_rate_upper = upper_avg
-    avg_rate_lower = lower_avg
 
 
  
