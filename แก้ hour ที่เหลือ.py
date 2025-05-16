@@ -2,6 +2,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -126,3 +128,26 @@ st.write(styled_lower)
 st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
 st.markdown("🟨 **ตัวอักษรสีเหลือง** = ค่า Rate ที่ทำให้ค่าเฉลี่ยกลายเป็น 'คงที่'")
 st.markdown("🔴 **สีแดง** = ค่า Rate ยังไม่คงที่")
+
+
+
+avg_rate_upper = upper_df["Avg Rate (Upper)"].tolist()[:32]
+avg_rate_lower = lower_df["Avg Rate (Lower)"].tolist()[:32]
+
+if "Sheet7" in xls.sheet_names:
+        df_sheet7 = xls.parse("Sheet7", header=None)
+        upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
+        lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
+
+def calculate_hours_safe(current, rate):
+        return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+
+hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
+hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+
+st.subheader("📊 กราฟรวม Avg Rate")
+fig_combined = go.Figure()
+fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_upper, mode='lines+markers+text', name='Upper Avg Rate', line=dict(color='red'), text=[str(i) for i in brush_numbers], textposition='top center'))
+fig_combined.add_trace(go.Scatter(x=brush_numbers, y=avg_rate_lower, mode='lines+markers+text', name='Lower Avg Rate', line=dict(color='deepskyblue'), text=[str(i) for i in brush_numbers], textposition='top center'))
+fig_combined.update_layout(xaxis_title='Brush Number', yaxis_title='Wear Rate (mm/hour)', template='plotly_white')
+st.plotly_chart(fig_combined, use_container_width=True)
