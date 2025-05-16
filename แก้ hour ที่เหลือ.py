@@ -85,7 +85,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             percent_diff = abs(new_rate - avg_rate) / avg_rate
             if percent_diff <= threshold:
                 mark_dict[row_index] = sheet_name
-                return round(avg_rate, 6), True
+                return round(avg_rate, 6), True  # ✅ ไม่รวม new_rate
+        # ถ้ายังไม่ผ่าน → ใช้ค่าเฉลี่ยรวม new_rate ตามเดิม
         combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
