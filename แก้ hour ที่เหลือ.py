@@ -226,13 +226,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             valid = row[row > 0]
             return valid.sum() / len(valid) if len(valid) > 0 else np.nan
 
-        upper_df = pd.DataFrame.from_dict(upper_rates, orient='index')
-        lower_df = pd.DataFrame.from_dict(lower_rates, orient='index')
-        upper_df["Avg Rate (Upper)"] = upper_df.apply(avg_positive, axis=1)
-        lower_df["Avg Rate (Lower)"] = lower_df.apply(avg_positive, axis=1)
-
-        avg_rate_upper = upper_df["Avg Rate (Upper)"].tolist()[:32]
-        avg_rate_lower = lower_df["Avg Rate (Lower)"].tolist()[:32]
+            # ใช้ค่าที่คำนวณแล้วก่อนหน้า
+        avg_rate_upper = upper_avg
+        avg_rate_lower = lower_avg
 
         df_current = xls.parse(f"Sheet{sheet_count}", header=None, skiprows=2)
         upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').values
