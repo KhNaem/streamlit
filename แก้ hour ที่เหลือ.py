@@ -342,7 +342,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
-    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
+    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
