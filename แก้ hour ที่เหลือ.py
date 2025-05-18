@@ -38,8 +38,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+
     response = requests.get(sheet_url_export)
     xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
 
