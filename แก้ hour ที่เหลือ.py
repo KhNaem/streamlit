@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
-st.set\_page\_config(page\_title="Brush Dashboard", layout="wide")
+st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
 page = st.sidebar.radio("📂 เลือกหน้า", \[
 "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ",
