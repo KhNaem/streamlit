@@ -24,7 +24,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
+    sheet_url = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
 
     sheet_names = [ws.title for ws in sh.worksheets()]
