@@ -339,6 +339,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     if st.button("📤 บันทึก"):
         try:
+            ws.update("A2", [[prev_date]])
+            ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
             ws.update("C3:C34", [[v] for v in upper])
             ws.update("F3:F34", [[v] for v in lower])
