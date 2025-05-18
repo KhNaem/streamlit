@@ -12,13 +12,13 @@ st.set_page_config(page_title="Brush Dashboard", layout="wide")
 page = st.sidebar.radio("📂 เลือกหน้า", [
     "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ",
     "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
-    "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"
-])
-# ------------------ PAGE 1 ------------------
+    "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
+
+
+# ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
-
 
     # Setup credentials and spreadsheet access
     service_account_info = st.secrets["gcp_service_account"]
@@ -35,8 +35,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:sheet_count]
 
-    sheet_url_export = f"{sheet_url}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url_export, engine='openpyxl')
+    import requests
+    from io import BytesIO
+
+    sheet_url_export = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
+    response = requests.get(sheet_url_export)
+    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
 
     brush_numbers = list(range(1, 33))
     upper_rates, lower_rates = {n:{} for n in brush_numbers}, {n:{} for n in brush_numbers}
@@ -146,7 +151,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     avg_rate_upper = upper_avg
     avg_rate_lower = lower_avg
-
+    
 
     if "Sheet7" in xls.sheet_names:
             df_sheet7 = xls.parse("Sheet7", header=None)
@@ -280,10 +285,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         
     st.session_state.upper_avg = upper_avg
     st.session_state.lower_avg = lower_avg
-    
 
 # --------------------------------------------------- PAGE 2 -------------------------------------------------
-
 elif page == "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม":
     st.title("📝 กรอกข้อมูลแปรงถ่าน + ชั่วโมง")
 
@@ -291,11 +294,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ")
-    
 
-    # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
-
-
+# ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
 
@@ -341,7 +341,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
     xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ/export?format=xlsx")
-
+   
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
@@ -421,30 +421,32 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     except Exception as e:
         st.error(f"❌ ไม่สามารถโหลดข้อมูลจากชีตนี้ได้: {e}")
         
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 # ------------------ PAGE 3 ------------------
+
+
+
+
 
 elif page == "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)":
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
-
 
     # เชื่อมต่อ Google Sheet
     sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
-
-
+    
+    
 
     sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
@@ -487,7 +489,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     def avg_positive(row_dict):
         values = [v for v in row_dict.values() if pd.notna(v) and v > 0]
         return sum(values) / len(values) if values else np.nan
-
+    
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
@@ -517,14 +519,14 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
-
+    
 
     avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
     avg_rate_lower = st.session_state.get("lower_avg", [0]*32)
 
 
 
-
+ 
 
     # ใช้ current จาก sheet ล่าสุด เช่น Sheet{sheet_count}
     df_current = xls.parse(f"Sheet{sheet_count}", header=None, skiprows=2)
