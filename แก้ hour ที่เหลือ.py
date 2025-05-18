@@ -305,6 +305,11 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     ws = sh.worksheet(selected_sheet)
 
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
+    
+    #เพิ่มวันที่เข้าไป
+    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
+    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
     upper = []
@@ -334,6 +339,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     if st.button("📤 บันทึก"):
         try:
+            ws.update("A2", [[prev_date]])
+            ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
             ws.update("C3:C34", [[v] for v in upper])
             ws.update("F3:F34", [[v] for v in lower])
