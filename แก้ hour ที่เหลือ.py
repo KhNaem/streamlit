@@ -4,7 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import gspread
-from google.oauth2.service\_account import Credentials
+from google.oauth2.service_account import Credentials
 
 st.set\_page\_config(page\_title="Brush Dashboard", layout="wide")
 
