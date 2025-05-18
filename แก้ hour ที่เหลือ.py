@@ -307,9 +307,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
     
     
-    #prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
-    #curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
-    #hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
+    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
+    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
+ 
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
     upper = []
