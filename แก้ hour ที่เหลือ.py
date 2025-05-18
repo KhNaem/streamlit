@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph\_objects as go
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service\_account import Credentials
