@@ -38,9 +38,11 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_url_export = "https://docs.google.com/spreadsheets/d/1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ/edit?usp=sharing"
+    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
+    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(sheet_url_export)
     xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
 
 
     brush_numbers = list(range(1, 33))
