@@ -109,38 +109,68 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
+
     # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict):
+    # เก็บค่าคงที่เดิมไว้ก่อน เพื่อไม่ให้รีเซ็ตทุกครั้ง
+    permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {}).copy()
+    permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {}).copy()
+    permanent_fixed_lower = st.session_state.get("permanent_fixed_lower", {}).copy()
+    permanent_yellow_lower = st.session_state.get("permanent_yellow_lower", {}).copy()
+    
+    sheet_index_map = {name: idx + 1 for idx, name in enumerate(selected_sheets)}
+
+
+
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
 
         for i, row in df.iterrows():
+            sheet_names = list(row[row > 0].index)
             values = row[row > 0].tolist()
 
-            # ✅ ถ้ามีค่าคงที่อยู่ใน permanent แล้ว → คืนค่าเดิมทันที
+            # 🔒 ถ้าล็อกค่าไว้แล้ว → ใช้ค่าล็อกเลย
             if i in permanent_fixed_rates:
                 avg_col.append(permanent_fixed_rates[i])
-                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำตำแหน่งสีเหลือง
+                mark_dict[i] = permanent_yellow_dict[i]
                 continue
 
-            # ✅ ถ้ายังไม่มีค่าคงที่ → ตรวจสอบเงื่อนไขเพื่อทำให้คงที่
-            if len(values) >= 6:
-                prev = values[:-1]
-                new = values[-1]
-                sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
-                avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
-                avg_col.append(avg)
-                if fixed:
-                    rate_fixed_set.add(i)
-                    permanent_fixed_rates[i] = avg
-                    permanent_yellow_dict[i] = sheet_name  # ⬅️ จำตำแหน่ง sheet สีเหลือง
+            if len(values) >= min_required:
+                for j in range(min_required, len(values) + 1):
+                    prev = values[:j - 1]
+                    new = values[j - 1]
+                    sheet_name = sheet_names[j - 1]
+                    sheet_num = sheet_index_map.get(sheet_name, 0)
+                    avg = sum(prev) / len(prev) if prev else 0
+                    percent_diff = abs(new - avg) / avg if avg > 0 else 1
+
+                    if percent_diff <= threshold and sheet_num >= 6:
+                        final_avg = round(avg, 6)
+                        avg_col.append(final_avg)
+                        rate_fixed_set.add(i)
+                        permanent_fixed_rates[i] = final_avg
+                        permanent_yellow_dict[i] = sheet_name
+                        break
+                else:
+                    avg_col.append(round(sum(values) / len(values), 6))
             else:
-                avg = round(np.mean(values), 6) if values else 0.000000
-                avg_col.append(avg)
+                avg_col.append(round(sum(values) / len(values), 6) if values else 0.000000)
 
         return df, avg_col
+
+    
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+
+
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+    st.session_state.permanent_fixed_lower = permanent_fixed_lower
+    st.session_state.permanent_yellow_lower = permanent_yellow_lower
+
+    
 
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
 
@@ -175,7 +205,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                         styles.append("color: red; font-weight: bold")
                 else:
                     styles.append("color: red; font-weight: bold")
-            elif yellow_mark_dict.get(row.name) == col:
+            elif yellow_mark_dict.get(row.name, "") == col:
                 styles.append("color: yellow; font-weight: bold")
             else:
                 styles.append("")
