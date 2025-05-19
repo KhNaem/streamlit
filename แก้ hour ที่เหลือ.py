@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -25,9 +24,6 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
 
 
 # ------------------ PAGE 1 ------------------
-permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
-permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
-
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
 
@@ -144,8 +140,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return df, avg_col
 
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
-    st.session_state.permanent_fixed_upper = permanent_fixed_upper
-    st.session_state.permanent_yellow_upper = permanent_yellow_upper
 
     upper_df, upper_avg = calc_avg_with_flag(
     upper_rates, rate_fixed_upper, yellow_mark_upper,
@@ -414,8 +408,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         hour_val = selected_ws.acell("H1").value
         
         #เอาไปกรอกใน web
-        st.markdown(f"📆 วันที่ Previous: **`{date_prev}`** | วันที่ Current: **`{date_curr}`**")
-        st.markdown(f"#### ⏱️ ชั่วโมงจาก `{selected_view_sheet}`: `{hour_val}` ชั่วโมง")
+        st.markdown(f"📆 วันที่ Previous: **{date_prev}** | วันที่ Current: **{date_curr}**")
+        st.markdown(f"#### ⏱️ ชั่วโมงจาก {selected_view_sheet}: {hour_val} ชั่วโมง")
 
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         
@@ -577,7 +571,6 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
-    
     
 
     avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
