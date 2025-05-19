@@ -164,13 +164,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.session_state.permanent_yellow_upper = permanent_yellow_upper
 
     upper_df, upper_avg = calc_avg_with_flag(
-    upper_rates, rate_fixed_upper, yellow_mark_upper,
-    permanent_fixed_upper, permanent_yellow_upper)
+        upper_rates, rate_fixed_upper, yellow_mark_upper,
+        permanent_fixed_upper, permanent_yellow_upper,
+        sheet_index_map)
 
     lower_df, lower_avg = calc_avg_with_flag(
-        lower_rates, rate_fixed_lower, yellow_mark_lower,
-        permanent_fixed_lower, permanent_yellow_lower)
-
+    lower_rates, rate_fixed_lower, yellow_mark_lower,
+    permanent_fixed_lower, permanent_yellow_lower,
+    sheet_index_map)
 
 
 
