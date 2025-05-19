@@ -107,11 +107,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
-
         for i, row in df.iterrows():
+            # ✅ ถ้าแปลงนี้มีการล็อกค่าถาวรแล้ว
             if i in permanent_fixed_dict:
                 avg_col.append(permanent_fixed_dict[i])
-                rate_fixed_set.add(i)
                 continue
 
             values = row[row > 0].tolist()
@@ -120,14 +119,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 new = values[-1]
                 sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
                 avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
-                final_value = avg if avg is not None else round(np.mean(values), 6)
-                avg_col.append(final_value)
+                avg_col.append(avg)
                 if fixed:
                     rate_fixed_set.add(i)
-                    permanent_fixed_dict[i] = final_value  # ✅ บันทึกไว้ถาวร
+                    permanent_fixed_dict[i] = avg  # ✅ ล็อกไว้ถาวร
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
+
 
 
 
