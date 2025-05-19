@@ -152,12 +152,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
         return df, avg_col
 
-
-    upper_df, upper_avg = calc_avg_with_flag(
-    upper_rates, rate_fixed_upper, yellow_mark_upper,
-    permanent_fixed_upper, permanent_yellow_upper,
-    sheet_index_map)
-
     
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
     st.session_state.permanent_fixed_upper = permanent_fixed_upper
