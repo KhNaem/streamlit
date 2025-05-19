@@ -102,18 +102,18 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
-
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_dict):
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
+
         for i, row in df.iterrows():
-            # ✅ ถ้าแปลงนี้มีการล็อกค่าถาวรแล้ว
-            if i in permanent_fixed_dict:
-                avg_col.append(permanent_fixed_dict[i])
+            values = row[row > 0].tolist()
+
+            if i in permanent_fixed_rates:
+                avg_col.append(permanent_fixed_rates[i])  # ⛔️ ไม่คิดใหม่
                 continue
 
-            values = row[row > 0].tolist()
             if len(values) >= 6:
                 prev = values[:-1]
                 new = values[-1]
@@ -122,10 +122,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 avg_col.append(avg)
                 if fixed:
                     rate_fixed_set.add(i)
-                    permanent_fixed_dict[i] = avg  # ✅ ล็อกไว้ถาวร
+                    permanent_fixed_rates[i] = avg  # ✅ ล็อกไว้
             else:
-                avg_col.append(round(np.mean(values), 6) if values else 0.000000)
+                avg = round(np.mean(values), 6) if values else 0.000000
+                avg_col.append(avg)
+
         return df, avg_col
+
 
 
 
