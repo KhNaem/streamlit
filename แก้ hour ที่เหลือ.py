@@ -117,12 +117,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
 
-            # ✅ ถ้าล็อกถาวรไว้แล้ว → คืนค่าคงที่ทันที
+            # ✅ ถ้ามีค่าคงที่อยู่ใน permanent แล้ว → คืนค่าเดิมทันที
             if i in permanent_fixed_rates:
                 avg_col.append(permanent_fixed_rates[i])
-                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำให้ mark สีเหลืองเดิมเสมอ
+                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำตำแหน่งสีเหลือง
                 continue
 
+            # ✅ ถ้ายังไม่มีค่าคงที่ → ตรวจสอบเงื่อนไขเพื่อทำให้คงที่
             if len(values) >= 6:
                 prev = values[:-1]
                 new = values[-1]
@@ -132,7 +133,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 if fixed:
                     rate_fixed_set.add(i)
                     permanent_fixed_rates[i] = avg
-                    permanent_yellow_dict[i] = sheet_name  # ⬅️ บันทึกตำแหน่ง mark สีเหลือง
+                    permanent_yellow_dict[i] = sheet_name  # ⬅️ จำตำแหน่ง sheet สีเหลือง
             else:
                 avg = round(np.mean(values), 6) if values else 0.000000
                 avg_col.append(avg)
@@ -140,22 +141,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return df, avg_col
 
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
+
     upper_df, upper_avg = calc_avg_with_flag(
-        upper_rates,
-        rate_fixed_upper,
-        yellow_mark_upper,
-        permanent_fixed_upper,
-        permanent_yellow_upper
-    )
+    upper_rates, rate_fixed_upper, yellow_mark_upper,
+    permanent_fixed_upper, permanent_yellow_upper)
 
     lower_df, lower_avg = calc_avg_with_flag(
-        lower_rates,
-        rate_fixed_lower,
-        yellow_mark_lower,
-        permanent_fixed_lower,
-        permanent_yellow_lower
-    )
-    
+        lower_rates, rate_fixed_lower, yellow_mark_lower,
+        permanent_fixed_lower, permanent_yellow_lower)
+
 
 
 
