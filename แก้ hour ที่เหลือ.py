@@ -156,16 +156,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         permanent_yellow_lower
     )
     
-  
 
-
-
-
-
-    
-
-    upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper, permanent_fixed_upper)
-    lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower, permanent_fixed_lower)
 
 
     upper_df["Avg Rate (Upper)"] = upper_avg
