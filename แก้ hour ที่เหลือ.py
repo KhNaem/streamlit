@@ -155,7 +155,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         permanent_fixed_lower,
         permanent_yellow_lower
     )
-
+    
+    permanent_yellow_upper = {}
+    permanent_yellow_lower = {}
 
 
 
