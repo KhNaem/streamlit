@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+permanent_lock_upper = set()
+permanent_lock_lower = set()
+
 st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
 page = st.sidebar.radio("📂 เลือกหน้า", [
@@ -84,22 +87,30 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 rate = diff / hours if hours > 0 else 0
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
+
     # Step 2: Check for stable (fixed) rate logic
         # threshold คือการล็อกเปอร์เซ็นว่าให้ค่าไม่เกินเท่าไหร่
-    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, fixed_set, permanent_set, min_required=5, threshold=0.1):
+        # ถ้าเคยล็อกถาวรแล้ว ให้ข้ามการคำนวณ
+        if row_index in permanent_set:
+            return None, True
+
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
             avg_rate = sum(previous_rates) / len(previous_rates)
             percent_diff = abs(new_rate - avg_rate) / avg_rate
             if percent_diff <= threshold:
                 mark_dict[row_index] = sheet_name
-                return round(avg_rate, 6), True  # ✅ ไม่รวม new_rate
+                fixed_set.add(row_index)
+                permanent_set.add(row_index)  # ล็อกถาวร
+                return round(avg_rate, 6), True
         # ถ้ายังไม่ผ่าน → ใช้ค่าเฉลี่ยรวม new_rate ตามเดิม
         combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict):
+
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_set):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
@@ -109,16 +120,18 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 prev = values[:-1]
                 new = values[-1]
                 sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
-                avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
-                avg_col.append(avg)
-                if fixed:
-                    rate_fixed_set.add(i)
+                avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict, rate_fixed_set, permanent_set)
+                if avg is not None:
+                    avg_col.append(avg)
+                else:
+                    avg_col.append(round(np.mean(values), 6) if values else 0.000000)
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
 
-    upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
-    lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
+
+    upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper, permanent_lock_upper)
+    lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower, permanent_lock_lower)
 
     upper_df["Avg Rate (Upper)"] = upper_avg
     lower_df["Avg Rate (Lower)"] = lower_avg
