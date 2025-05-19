@@ -9,6 +9,8 @@ from google.oauth2.service_account import Credentials
 
 permanent_fixed_upper = {}
 permanent_fixed_lower = {}
+permanent_yellow_upper = {}
+permanent_yellow_lower = {}
 
 permanent_lock_upper = set()
 permanent_lock_lower = set()
@@ -91,8 +93,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
-    # Step 2: Check for stable (fixed) rate logic
-        # threshold คือการล็อกเปอร์เซ็นว่าให้ค่าไม่เกินเท่าไหร่
+    # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
+
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
@@ -105,7 +107,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates):
+    # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
+
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
@@ -113,9 +117,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
 
-            # ✅ ถ้ามีล็อกไว้แล้ว → ห้ามคิดใหม่
+            # ✅ ถ้าล็อกถาวรไว้แล้ว → คืนค่าคงที่ทันที
             if i in permanent_fixed_rates:
                 avg_col.append(permanent_fixed_rates[i])
+                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำให้ mark สีเหลืองเดิมเสมอ
                 continue
 
             if len(values) >= 6:
@@ -126,19 +131,37 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 avg_col.append(avg)
                 if fixed:
                     rate_fixed_set.add(i)
-                    permanent_fixed_rates[i] = avg  # ✅ ล็อกไว้
+                    permanent_fixed_rates[i] = avg
+                    permanent_yellow_dict[i] = sheet_name  # ⬅️ บันทึกตำแหน่ง mark สีเหลือง
             else:
                 avg = round(np.mean(values), 6) if values else 0.000000
                 avg_col.append(avg)
 
         return df, avg_col
 
+    # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
+    upper_df, upper_avg = calc_avg_with_flag(
+        upper_rates,
+        rate_fixed_upper,
+        yellow_mark_upper,
+        permanent_fixed_upper,
+        permanent_yellow_upper
+    )
+
+    lower_df, lower_avg = calc_avg_with_flag(
+        lower_rates,
+        rate_fixed_lower,
+        yellow_mark_lower,
+        permanent_fixed_lower,
+        permanent_yellow_lower
+    )
 
 
 
 
-    permanent_fixed_upper = {}
-    permanent_fixed_lower = {}
+
+
+    
 
     upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper, permanent_fixed_upper)
     lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower, permanent_fixed_lower)
