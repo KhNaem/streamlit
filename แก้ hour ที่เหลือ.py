@@ -112,48 +112,57 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict):
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict, selected_sheets):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
 
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
+            valid_columns = row[row > 0].index.tolist()
 
-            # ✅ ถ้ามีค่าคงที่อยู่ใน permanent แล้ว → คืนค่าเดิมทันที
             if i in permanent_fixed_rates:
-                avg_col.append(permanent_fixed_rates[i])
-                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำตำแหน่งสีเหลือง
-                continue
+                yellow_sheet = permanent_yellow_dict.get(i, "")
+                # ✅ ใช้ค่าคงที่ **เฉพาะเมื่อ sheet นั้นอยู่ใน selected_sheets**
+                if yellow_sheet in selected_sheets:
+                    avg_col.append(permanent_fixed_rates[i])
+                    mark_dict[i] = yellow_sheet
+                    continue  # ✅ ข้ามการคำนวณใหม่
+                else:
+                    del permanent_fixed_rates[i]  # ❌ ลบการล็อกออกไป (sheet ยังไม่ถึง)
+                    del permanent_yellow_dict[i]
+                    rate_fixed_set.discard(i)
 
-            # ✅ ถ้ายังไม่มีค่าคงที่ → ตรวจสอบเงื่อนไขเพื่อทำให้คงที่
             if len(values) >= 6:
                 prev = values[:-1]
                 new = values[-1]
-                sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
+                sheet_name = valid_columns[-1] if valid_columns else ""
                 avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
                 avg_col.append(avg)
                 if fixed:
                     rate_fixed_set.add(i)
                     permanent_fixed_rates[i] = avg
-                    permanent_yellow_dict[i] = sheet_name  # ⬅️ จำตำแหน่ง sheet สีเหลือง
+                    permanent_yellow_dict[i] = sheet_name
             else:
                 avg = round(np.mean(values), 6) if values else 0.000000
                 avg_col.append(avg)
 
         return df, avg_col
 
+
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
     st.session_state.permanent_fixed_upper = permanent_fixed_upper
     st.session_state.permanent_yellow_upper = permanent_yellow_upper
 
     upper_df, upper_avg = calc_avg_with_flag(
-    upper_rates, rate_fixed_upper, yellow_mark_upper,
-    permanent_fixed_upper, permanent_yellow_upper)
+        upper_rates, rate_fixed_upper, yellow_mark_upper,
+        permanent_fixed_upper, permanent_yellow_upper,
+        selected_sheets)
 
     lower_df, lower_avg = calc_avg_with_flag(
         lower_rates, rate_fixed_lower, yellow_mark_lower,
-        permanent_fixed_lower, permanent_yellow_lower)
+        permanent_fixed_lower, permanent_yellow_lower,
+        selected_sheets)
 
 
 
