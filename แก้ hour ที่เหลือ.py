@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+permanent_fixed_upper = {}
+permanent_fixed_lower = {}
+
 permanent_lock_upper = set()
 permanent_lock_lower = set()
 
@@ -110,8 +113,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
 
+            # ✅ ถ้ามีล็อกไว้แล้ว → ห้ามคิดใหม่
             if i in permanent_fixed_rates:
-                avg_col.append(permanent_fixed_rates[i])  # ⛔️ ไม่คิดใหม่
+                avg_col.append(permanent_fixed_rates[i])
                 continue
 
             if len(values) >= 6:
