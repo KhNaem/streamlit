@@ -14,6 +14,9 @@ permanent_yellow_lower = {}
 permanent_lock_upper = set()
 permanent_lock_lower = set()
 
+permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
+permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
+
 st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
 page = st.sidebar.radio("📂 เลือกหน้า", [
@@ -148,6 +151,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     lower_df, lower_avg = calc_avg_with_flag(
         lower_rates, rate_fixed_lower, yellow_mark_lower,
         permanent_fixed_lower, permanent_yellow_lower)
+    
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+
 
 
 
