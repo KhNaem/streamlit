@@ -98,7 +98,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
 
-    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.15):
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
             avg_rate = sum(previous_rates) / len(previous_rates)
@@ -115,7 +115,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_index_map = {name: idx + 1 for idx, name in enumerate(selected_sheets)}
 
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1):
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict,
+                        permanent_fixed_rates, permanent_yellow_dict,
+                        sheet_index_map, min_required=5, threshold=0.1):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
@@ -135,6 +137,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                     new = values[j - 1]
                     sheet_name = sheet_names[j - 1]
                     sheet_num = sheet_index_map.get(sheet_name, 0)
+
                     avg = sum(prev) / len(prev) if prev else 0
                     percent_diff = abs(new - avg) / avg if avg > 0 else 1
 
@@ -152,20 +155,20 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
         return df, avg_col
 
-    
+
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
     st.session_state.permanent_fixed_upper = permanent_fixed_upper
     st.session_state.permanent_yellow_upper = permanent_yellow_upper
-
+    
     upper_df, upper_avg = calc_avg_with_flag(
         upper_rates, rate_fixed_upper, yellow_mark_upper,
         permanent_fixed_upper, permanent_yellow_upper,
         sheet_index_map)
 
     lower_df, lower_avg = calc_avg_with_flag(
-    lower_rates, rate_fixed_lower, yellow_mark_lower,
-    permanent_fixed_lower, permanent_yellow_lower,
-    sheet_index_map)
+        lower_rates, rate_fixed_lower, yellow_mark_lower,
+        permanent_fixed_lower, permanent_yellow_lower,
+        sheet_index_map)
 
 
 
