@@ -157,12 +157,16 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     lower_df["Avg Rate (Lower)"] = lower_avg
 
     # Step 3: Styling output
-    def highlight_fixed_rate_row(row, column_name, fixed_set, yellow_mark_dict):
+    def highlight_fixed_rate_row(row, column_name, permanent_fixed_rates, yellow_mark_dict):
         styles = []
         for col in row.index:
             if col == column_name:
-                if row.name in fixed_set:
-                    styles.append("background-color: green; color: black; font-weight: bold")
+                if row.name in permanent_fixed_rates:
+                    correct_fixed_value = permanent_fixed_rates[row.name]
+                    if abs(row[col] - correct_fixed_value) < 1e-6:
+                        styles.append("background-color: green; color: black; font-weight: bold")
+                    else:
+                        styles.append("color: red; font-weight: bold")
                 else:
                     styles.append("color: red; font-weight: bold")
             elif yellow_mark_dict.get(row.name) == col:
@@ -172,11 +176,16 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
 
     st.subheader("📋 ตาราง Avg Rate - Upper")
-    styled_upper = upper_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", rate_fixed_upper, yellow_mark_upper), axis=1).format("{:.6f}")
+    styled_upper = upper_df.style.apply(
+    lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", permanent_fixed_upper, permanent_yellow_upper),
+    axis=1).format("{:.6f}")
+
     st.write(styled_upper)
 
     st.subheader("📋 ตาราง Avg Rate - Lower")
-    styled_lower = lower_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Lower)", rate_fixed_lower, yellow_mark_lower), axis=1).format("{:.6f}")
+    styled_lower = lower_df.style.apply(
+    lambda row: highlight_fixed_rate_row(row, "Avg Rate (Lower)", permanent_fixed_lower, permanent_yellow_lower),
+    axis=1).format("{:.6f}")
     st.write(styled_lower)
 
     st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
