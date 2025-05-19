@@ -25,6 +25,9 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
 
 
 # ------------------ PAGE 1 ------------------
+permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
+permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
+
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
 
@@ -141,6 +144,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return df, avg_col
 
     # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
 
     upper_df, upper_avg = calc_avg_with_flag(
     upper_rates, rate_fixed_upper, yellow_mark_upper,
@@ -179,8 +184,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     styled_upper = upper_df.style.apply(
     lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", permanent_fixed_upper, permanent_yellow_upper),
     axis=1).format("{:.6f}")
-
     st.write(styled_upper)
+
+
 
     st.subheader("📋 ตาราง Avg Rate - Lower")
     styled_lower = lower_df.style.apply(
@@ -571,6 +577,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
+    
     
 
     avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
