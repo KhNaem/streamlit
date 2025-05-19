@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,6 +5,17 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
+
+permanent_fixed_upper = {}
+permanent_fixed_lower = {}
+permanent_yellow_upper = {}
+permanent_yellow_lower = {}
+
+permanent_lock_upper = set()
+permanent_lock_lower = set()
+
+permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
+permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
 
 st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
@@ -85,8 +95,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
-    # Step 2: Check for stable (fixed) rate logic
-        # threshold คือการล็อกเปอร์เซ็นว่าให้ค่าไม่เกินเท่าไหร่
+    # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
+
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
@@ -94,18 +104,28 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             percent_diff = abs(new_rate - avg_rate) / avg_rate
             if percent_diff <= threshold:
                 mark_dict[row_index] = sheet_name
-                return round(avg_rate, 6), True  # ✅ ไม่รวม new_rate
-        # ถ้ายังไม่ผ่าน → ใช้ค่าเฉลี่ยรวม new_rate ตามเดิม
+                return round(avg_rate, 6), True
         combined = previous_rates + [new_rate] if new_rate > 0 else previous_rates
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict):
+    # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
+
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
+
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
+
+            # ✅ ถ้ามีค่าคงที่อยู่ใน permanent แล้ว → คืนค่าเดิมทันที
+            if i in permanent_fixed_rates:
+                avg_col.append(permanent_fixed_rates[i])
+                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำตำแหน่งสีเหลือง
+                continue
+
+            # ✅ ถ้ายังไม่มีค่าคงที่ → ตรวจสอบเงื่อนไขเพื่อทำให้คงที่
             if len(values) >= 6:
                 prev = values[:-1]
                 new = values[-1]
@@ -114,23 +134,45 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 avg_col.append(avg)
                 if fixed:
                     rate_fixed_set.add(i)
+                    permanent_fixed_rates[i] = avg
+                    permanent_yellow_dict[i] = sheet_name  # ⬅️ จำตำแหน่ง sheet สีเหลือง
             else:
-                avg_col.append(round(np.mean(values), 6) if values else 0.000000)
+                avg = round(np.mean(values), 6) if values else 0.000000
+                avg_col.append(avg)
+
         return df, avg_col
 
-    upper_df, upper_avg = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
-    lower_df, lower_avg = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
+    # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
+
+    upper_df, upper_avg = calc_avg_with_flag(
+    upper_rates, rate_fixed_upper, yellow_mark_upper,
+    permanent_fixed_upper, permanent_yellow_upper)
+
+    lower_df, lower_avg = calc_avg_with_flag(
+        lower_rates, rate_fixed_lower, yellow_mark_lower,
+        permanent_fixed_lower, permanent_yellow_lower)
+    
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+
+
+
+
 
     upper_df["Avg Rate (Upper)"] = upper_avg
     lower_df["Avg Rate (Lower)"] = lower_avg
 
     # Step 3: Styling output
-    def highlight_fixed_rate_row(row, column_name, fixed_set, yellow_mark_dict):
+    def highlight_fixed_rate_row(row, column_name, permanent_fixed_rates, yellow_mark_dict):
         styles = []
         for col in row.index:
             if col == column_name:
-                if row.name in fixed_set:
-                    styles.append("background-color: green; color: black; font-weight: bold")
+                if row.name in permanent_fixed_rates:
+                    correct_fixed_value = permanent_fixed_rates[row.name]
+                    if abs(row[col] - correct_fixed_value) < 1e-6:
+                        styles.append("background-color: green; color: black; font-weight: bold")
+                    else:
+                        styles.append("color: red; font-weight: bold")
                 else:
                     styles.append("color: red; font-weight: bold")
             elif yellow_mark_dict.get(row.name) == col:
@@ -140,11 +182,17 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
 
     st.subheader("📋 ตาราง Avg Rate - Upper")
-    styled_upper = upper_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", rate_fixed_upper, yellow_mark_upper), axis=1).format("{:.6f}")
+    styled_upper = upper_df.style.apply(
+    lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", permanent_fixed_upper, permanent_yellow_upper),
+    axis=1).format("{:.6f}")
     st.write(styled_upper)
 
+
+
     st.subheader("📋 ตาราง Avg Rate - Lower")
-    styled_lower = lower_df.style.apply(lambda row: highlight_fixed_rate_row(row, "Avg Rate (Lower)", rate_fixed_lower, yellow_mark_lower), axis=1).format("{:.6f}")
+    styled_lower = lower_df.style.apply(
+    lambda row: highlight_fixed_rate_row(row, "Avg Rate (Lower)", permanent_fixed_lower, permanent_yellow_lower),
+    axis=1).format("{:.6f}")
     st.write(styled_lower)
 
     st.markdown("🟩 **สีเขียว** = ค่าคงที่ที่นำไปใช้ในกราฟ")
@@ -367,8 +415,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         hour_val = selected_ws.acell("H1").value
         
         #เอาไปกรอกใน web
-        st.markdown(f"📆 วันที่ Previous: **`{date_prev}`** | วันที่ Current: **`{date_curr}`**")
-        st.markdown(f"#### ⏱️ ชั่วโมงจาก `{selected_view_sheet}`: `{hour_val}` ชั่วโมง")
+        st.markdown(f"📆 วันที่ Previous: **{date_prev}** | วันที่ Current: **{date_curr}**")
+        st.markdown(f"#### ⏱️ ชั่วโมงจาก {selected_view_sheet}: {hour_val} ชั่วโมง")
 
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         
