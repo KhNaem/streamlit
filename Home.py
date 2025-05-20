@@ -113,10 +113,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
 
     # เก็บค่าคงที่เดิมไว้ก่อน เพื่อไม่ให้รีเซ็ตทุกครั้ง
-    permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {}).copy()
-    permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {}).copy()
-    permanent_fixed_lower = st.session_state.get("permanent_fixed_lower", {}).copy()
-    permanent_yellow_lower = st.session_state.get("permanent_yellow_lower", {}).copy()
+    if "permanent_fixed_upper" not in st.session_state:
+        st.session_state.permanent_fixed_upper = {}
+    if "permanent_yellow_upper" not in st.session_state:
+        st.session_state.permanent_yellow_upper = {}
+    if "permanent_fixed_lower" not in st.session_state:
+        st.session_state.permanent_fixed_lower = {}
+    if "permanent_yellow_lower" not in st.session_state:
+        st.session_state.permanent_yellow_lower = {}
+
     
     sheet_index_map = {name: idx + 1 for idx, name in enumerate(selected_sheets)}
 
