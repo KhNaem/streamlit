@@ -544,9 +544,11 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     
     #แก้ตรงนี้เพิ่ม
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
-    selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
+    
+    sheet_count = st.number_input("📌 เลือก Sheet ที่ต้องการดู (ตัวเลข)", min_value=1, max_value=20, value=7)
+    selected_view_sheet = f"Sheet{sheet_count}"
 
-    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=8, value=6)
+    #sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=8, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
