@@ -122,20 +122,23 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1):
+    def calc_avg_with_flag(
+        rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates,
+        permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1
+    ):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
 
         for i, row in df.iterrows():
-            sheet_names = list(row[row > 0].index)
-            values = row[row > 0].tolist()
-
-            # 🔒 ถ้าล็อกค่าไว้แล้ว → ใช้ค่าล็อกเลย
+            # ✅✅ ถ้ามีค่าคงที่อยู่แล้ว → คืนค่าเดิมไปเลย
             if i in permanent_fixed_rates:
                 avg_col.append(permanent_fixed_rates[i])
-                mark_dict[i] = permanent_yellow_dict[i]
+                mark_dict[i] = permanent_yellow_dict.get(i, "")
                 continue
+
+            sheet_names = list(row[row > 0].index)
+            values = row[row > 0].tolist()
 
             if len(values) >= min_required:
                 for j in range(min_required, len(values) + 1):
@@ -160,6 +163,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
         return df, avg_col
 
+
     
  
 
@@ -180,6 +184,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.session_state.permanent_yellow_lower = permanent_yellow_lower
 
     
+    if st.button("🔄 Reset ค่า Permanent Lock ทั้งหมด"):
+        st.session_state["permanent_fixed_upper"] = {}
+        st.session_state["permanent_yellow_upper"] = {}
+        st.session_state["permanent_fixed_lower"] = {}
+        st.session_state["permanent_yellow_lower"] = {}
+        st.success("🧹 ล้างค่า lock ทั้งหมดแล้ว")
+        st.experimental_rerun()
 
 
 
