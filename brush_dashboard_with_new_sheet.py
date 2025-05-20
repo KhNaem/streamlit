@@ -98,7 +98,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
 
-    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=4, threshold=0.1):
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
             avg_rate = sum(previous_rates) / len(previous_rates)
