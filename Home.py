@@ -128,14 +128,19 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
     def calc_avg_with_flag(
-        rates_dict, rate_fixed_set, mark_dict, sheet_index_map, 
-        min_required=5, threshold=0.1, enforce_fix=True  # 👈 เพิ่ม parameter ใหม่
+        rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates,
+        permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1
     ):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
 
         for i, row in df.iterrows():
+            if i in permanent_fixed_rates:
+                avg_col.append(permanent_fixed_rates[i])
+                mark_dict[i] = permanent_yellow_dict.get(i, "")
+                continue
+
             sheet_names = list(row[row > 0].index)
             values = row[row > 0].tolist()
 
@@ -147,14 +152,16 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                     avg = sum(prev) / len(prev) if prev else 0
                     percent_diff = abs(new - avg) / avg if avg > 0 else 1
 
-                    if percent_diff <= threshold and enforce_fix:
+                    if percent_diff <= threshold:
                         final_avg = round(avg, 6)
                         avg_col.append(final_avg)
                         rate_fixed_set.add(i)
-                        mark_dict[i] = sheet_name
+                        permanent_fixed_rates[i] = final_avg
+                        permanent_yellow_dict[i] = sheet_name
                         break
                 else:
                     avg_col.append(round(sum(values) / len(values), 6))
+
             else:
                 avg_col.append(round(sum(values) / len(values), 6) if values else 0.000000)
 
@@ -162,21 +169,18 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
 
-
     
  
 
-    # ใช้ enforce_fix=True เฉพาะตอนมีชีตมากกว่า min_required
-    enforce = sheet_count > 7  # หรือ > 5 ถ้าคุณตั้ง min_required = 5
+    # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
 
     upper_df, upper_avg = calc_avg_with_flag(
-        upper_rates, rate_fixed_upper, yellow_mark_upper,
-        sheet_index_map, min_required=5, threshold=0.1, enforce_fix=enforce)
+    upper_rates, rate_fixed_upper, yellow_mark_upper,
+    permanent_fixed_upper, permanent_yellow_upper,sheet_index_map)
 
     lower_df, lower_avg = calc_avg_with_flag(
         lower_rates, rate_fixed_lower, yellow_mark_lower,
-        sheet_index_map, min_required=5, threshold=0.1, enforce_fix=enforce)
-
+        permanent_fixed_lower, permanent_yellow_lower,sheet_index_map)
     
 
     st.session_state.permanent_fixed_upper = permanent_fixed_upper
@@ -209,8 +213,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             else:
                 styles.append("")
         return styles
-    
-    
 
     st.subheader("📋 ตาราง Avg Rate - Upper")
     styled_upper = upper_df.style.apply(
@@ -532,23 +534,13 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # เชื่อมต่อ Google Sheet
-    
-    service_account_info = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-    gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
-    
     sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
     
-    #แก้ตรงนี้เพิ่ม
-    sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     
-    sheet_count = st.number_input("📌 เลือก Sheet ที่ต้องการดู (ตัวเลข)", min_value=1, max_value=20, value=7)
-    selected_view_sheet = f"Sheet{sheet_count}"
 
-    #sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=8, value=6)
+    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
