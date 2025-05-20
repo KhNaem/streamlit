@@ -189,15 +189,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.session_state.permanent_yellow_lower = permanent_yellow_lower
 
     
-    if st.button("🔄 Reset ค่า Permanent Lock ทั้งหมด"):
-        st.session_state["permanent_fixed_upper"] = {}
-        st.session_state["permanent_yellow_upper"] = {}
-        st.session_state["permanent_fixed_lower"] = {}
-        st.session_state["permanent_yellow_lower"] = {}
-        st.success("🧹 ล้างค่า lock ทั้งหมดแล้ว")
-        st.experimental_rerun()
-
-
+ 
 
 
     upper_df["Avg Rate (Upper)"] = upper_avg
