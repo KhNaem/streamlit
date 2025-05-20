@@ -273,8 +273,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.plotly_chart(fig_lower, use_container_width=True)
 
 
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
-    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=6)
+    #sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+    #sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=6)
     try:
         
         xls = pd.ExcelFile(sheet_url_export, engine='openpyxl')
