@@ -131,7 +131,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         avg_col = []
 
         for i, row in df.iterrows():
-            # ✅✅ ถ้ามีค่าคงที่อยู่แล้ว → คืนค่าเดิมไปเลย
+            # ✅ ถ้าค่าคงที่ถูกเก็บไว้แล้ว ใช้เลย
             if i in permanent_fixed_rates:
                 avg_col.append(permanent_fixed_rates[i])
                 mark_dict[i] = permanent_yellow_dict.get(i, "")
@@ -146,16 +146,19 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                     new = values[j - 1]
                     sheet_name = sheet_names[j - 1]
                     sheet_num = sheet_index_map.get(sheet_name, 0)
-                    avg = sum(prev) / len(prev) if prev else 0
-                    percent_diff = abs(new - avg) / avg if avg > 0 else 1
 
-                    if percent_diff <= threshold and sheet_num >= 6:
-                        final_avg = round(avg, 6)
-                        avg_col.append(final_avg)
-                        rate_fixed_set.add(i)
-                        permanent_fixed_rates[i] = final_avg
-                        permanent_yellow_dict[i] = sheet_name
-                        break
+                    # ✅ เงื่อนไขใหม่: ให้ lock เฉพาะ sheet ล่าสุดเท่านั้น
+                    if sheet_num == len(sheet_index_map):
+                        avg = sum(prev) / len(prev) if prev else 0
+                        percent_diff = abs(new - avg) / avg if avg > 0 else 1
+
+                        if percent_diff <= threshold:
+                            final_avg = round(avg, 6)
+                            avg_col.append(final_avg)
+                            rate_fixed_set.add(i)
+                            permanent_fixed_rates[i] = final_avg
+                            permanent_yellow_dict[i] = sheet_name
+                            break
                 else:
                     avg_col.append(round(sum(values) / len(values), 6))
             else:
