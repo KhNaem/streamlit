@@ -152,7 +152,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                         avg = sum(prev) / len(prev) if prev else 0
                         percent_diff = abs(new - avg) / avg if avg > 0 else 1
 
-                        if percent_diff <= threshold and sheet_num == len(sheet_index_map):
+                        if percent_diff <= threshold:
                             final_avg = round(avg, 6)
                             avg_col.append(final_avg)
                             rate_fixed_set.add(i)
