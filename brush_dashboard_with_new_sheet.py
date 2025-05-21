@@ -414,7 +414,6 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     ws = sh.worksheet(selected_sheet)
 
-    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
     
     df_current = xls.parse(selected_sheet, skiprows=2, header=None)
     
@@ -432,14 +431,14 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     except:
         default_hours = 0.0
         
-    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=float(default_hours))
+ 
 
         
     default_prev_date = ws.acell("A2").value or ""
     default_curr_date = ws.acell("B2").value or ""
 
 
-    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=default_hours)
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=float(default_hours))
     prev_date = st.text_input(..., value=default_prev_date)
     curr_date = st.text_input(..., value=default_curr_date)
 
