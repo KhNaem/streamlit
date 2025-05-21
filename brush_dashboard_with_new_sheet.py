@@ -440,8 +440,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=float(default_hours))
     
-    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY", value=default_prev_date)
-    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY", value=default_curr_date)
+    prev_date = st.text_input("📅 วันที่ตรวจก่อนหน้า", placeholder="DD/MM/YYYY", value=default_prev_date)
+    curr_date = st.text_input("📅 วันที่ตรวจล่าสุด", placeholder="DD/MM/YYYY", value=default_curr_date)
 
  
     
