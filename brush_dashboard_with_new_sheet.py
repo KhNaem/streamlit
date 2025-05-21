@@ -392,14 +392,17 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 elif page == "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม":
     st.title("📝 กรอกข้อมูลแปรงถ่าน + ชั่วโมง")
     
-    import requests
     from io import BytesIO
+    import requests
 
     sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-
     response = requests.get(url)
+
     xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
+    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
+
 
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
@@ -414,7 +417,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
     
-    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon.../export?format=xlsx")
+    
+    
     df_current = xls.parse(selected_sheet, skiprows=2, header=None)
 
     lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').fillna(0).tolist()
