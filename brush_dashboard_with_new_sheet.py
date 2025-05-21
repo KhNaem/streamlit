@@ -447,23 +447,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     
     
 
-    st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
-    upper = []
-    cols = st.columns(8)
-    for i in range(32):
-        col = cols[i % 8]
-        with col:
-            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(
-            f"upper_{i+1}",                     # ชื่อ label
-            key=f"upper_input_{i}",             # key ไม่ซ้ำ
-            value=str(upper_current[i]),       # ดึงค่าปัจจุบันมาแสดง
-        )
-
-            try:
-                upper.append(float(value))
-            except:
-                upper.append(0.0)
+    
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
     lower = []
@@ -481,6 +465,24 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
                 lower.append(float(value))
             except:
                 lower.append(0.0)
+                
+    st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
+    upper = []
+    cols = st.columns(8)
+    for i in range(32):
+        col = cols[i % 8]
+        with col:
+            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
+            value = st.text_input(
+            f"upper_{i+1}",                     # ชื่อ label
+            key=f"upper_input_{i}",             # key ไม่ซ้ำ
+            value=str(upper_current[i]),       # ดึงค่าปัจจุบันมาแสดง
+        )
+
+            try:
+                upper.append(float(value))
+            except:
+                upper.append(0.0)
 
     if st.button("📤 บันทึก"):
         try:
