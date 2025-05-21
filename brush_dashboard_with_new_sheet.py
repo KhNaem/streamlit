@@ -424,18 +424,21 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
     curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
  
-    upper = []
-    lower = []
     
     
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
+    upper = []
     cols = st.columns(8)
     for i in range(32):
         col = cols[i % 8]
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"upper_{i+1}",key=f"upper_input_{i}",label_visibility="collapsed",placeholder="0.00",value=str(upper_current[i]))
+            value = st.text_input(
+            f"upper_{i+1}",                     # ชื่อ label
+            key=f"upper_input_{i}",             # key ไม่ซ้ำ
+            value=str(upper_current[i]),       # ดึงค่าปัจจุบันมาแสดง
+        )
 
             try:
                 upper.append(float(value))
@@ -443,12 +446,17 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
                 upper.append(0.0)
 
     st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
+    lower = []
     cols = st.columns(8)
     for i in range(32):
         col = cols[i % 8]
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"lower_{i+1}",key=f"lower_input_{i}",label_visibility="collapsed",placeholder="0.00",value=str(lower_current[i]))
+            value = st.text_input(
+            f"lower_{i+1}",                     # ชื่อ label
+            key=f"lower_input_{i}",             # key ไม่ซ้ำ
+            value=str(lower_current[i]),       # ดึงค่าปัจจุบันมาแสดง
+        )
             try:
                 lower.append(float(value))
             except:
