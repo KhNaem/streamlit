@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -15,6 +14,9 @@ permanent_yellow_lower = {}
 permanent_lock_upper = set()
 permanent_lock_lower = set()
 
+permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
+permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
+
 st.set_page_config(page_title="Brush Dashboard", layout="wide")
 
 page = st.sidebar.radio("📂 เลือกหน้า", [
@@ -25,9 +27,6 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
 
 
 # ------------------ PAGE 1 ------------------
-permanent_fixed_upper = st.session_state.get("permanent_fixed_upper", {})
-permanent_yellow_upper = st.session_state.get("permanent_yellow_upper", {})
-
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
 
@@ -110,52 +109,83 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
+
     # 3. แก้ calc_avg_with_flag ให้ใช้ permanent_* ให้ค่าคงที่ตลอด
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates, permanent_yellow_dict):
+    # เก็บค่าคงที่เดิมไว้ก่อน เพื่อไม่ให้รีเซ็ตทุกครั้ง
+    if "permanent_fixed_upper" not in st.session_state:
+        st.session_state.permanent_fixed_upper = {}
+    if "permanent_yellow_upper" not in st.session_state:
+        st.session_state.permanent_yellow_upper = {}
+    if "permanent_fixed_lower" not in st.session_state:
+        st.session_state.permanent_fixed_lower = {}
+    if "permanent_yellow_lower" not in st.session_state:
+        st.session_state.permanent_yellow_lower = {}
+
+    
+    sheet_index_map = {name: idx + 1 for idx, name in enumerate(selected_sheets)}
+
+
+
+    def calc_avg_with_flag(
+        rates_dict, rate_fixed_set, mark_dict, sheet_index_map, 
+        min_required=5, threshold=0.1, enforce_fix=True  # 👈 เพิ่ม parameter ใหม่
+    ):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
 
         for i, row in df.iterrows():
+            sheet_names = list(row[row > 0].index)
             values = row[row > 0].tolist()
 
-            # ✅ ถ้ามีค่าคงที่อยู่ใน permanent แล้ว → คืนค่าเดิมทันที
-            if i in permanent_fixed_rates:
-                avg_col.append(permanent_fixed_rates[i])
-                mark_dict[i] = permanent_yellow_dict[i]  # ย้ำตำแหน่งสีเหลือง
-                continue
+            if len(values) >= min_required:
+                for j in range(min_required, len(values) + 1):
+                    prev = values[:j - 1]
+                    new = values[j - 1]
+                    sheet_name = sheet_names[j - 1]
+                    avg = sum(prev) / len(prev) if prev else 0
+                    percent_diff = abs(new - avg) / avg if avg > 0 else 1
 
-            # ✅ ถ้ายังไม่มีค่าคงที่ → ตรวจสอบเงื่อนไขเพื่อทำให้คงที่
-            if len(values) >= 6:
-                prev = values[:-1]
-                new = values[-1]
-                sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
-                avg, fixed = determine_final_rate(prev, new, i, sheet_name, mark_dict)
-                avg_col.append(avg)
-                if fixed:
-                    rate_fixed_set.add(i)
-                    permanent_fixed_rates[i] = avg
-                    permanent_yellow_dict[i] = sheet_name  # ⬅️ จำตำแหน่ง sheet สีเหลือง
+                    if percent_diff <= threshold and enforce_fix:
+                        final_avg = round(avg, 6)
+                        avg_col.append(final_avg)
+                        rate_fixed_set.add(i)
+                        mark_dict[i] = sheet_name
+                        break
+                else:
+                    avg_col.append(round(sum(values) / len(values), 6))
             else:
-                avg = round(np.mean(values), 6) if values else 0.000000
-                avg_col.append(avg)
+                avg_col.append(round(sum(values) / len(values), 6) if values else 0.000000)
 
         return df, avg_col
 
-    # 4. เรียกใช้แบบใหม่ (ตัวอย่าง Upper)
-    st.session_state.permanent_fixed_upper = permanent_fixed_upper
-    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+
+
+
+    
+ 
+
+    # ใช้ enforce_fix=True เฉพาะตอนมีชีตมากกว่า min_required
+    enforce = sheet_count > 7  # หรือ > 5 ถ้าคุณตั้ง min_required = 5
 
     upper_df, upper_avg = calc_avg_with_flag(
-    upper_rates, rate_fixed_upper, yellow_mark_upper,
-    permanent_fixed_upper, permanent_yellow_upper)
+        upper_rates, rate_fixed_upper, yellow_mark_upper,
+        sheet_index_map, min_required=5, threshold=0.1, enforce_fix=enforce)
 
     lower_df, lower_avg = calc_avg_with_flag(
         lower_rates, rate_fixed_lower, yellow_mark_lower,
-        permanent_fixed_lower, permanent_yellow_lower)
+        sheet_index_map, min_required=5, threshold=0.1, enforce_fix=enforce)
 
+    
 
+    st.session_state.permanent_fixed_upper = permanent_fixed_upper
+    st.session_state.permanent_yellow_upper = permanent_yellow_upper
+    st.session_state.permanent_fixed_lower = permanent_fixed_lower
+    st.session_state.permanent_yellow_lower = permanent_yellow_lower
+
+    
+ 
 
 
     upper_df["Avg Rate (Upper)"] = upper_avg
@@ -174,11 +204,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                         styles.append("color: red; font-weight: bold")
                 else:
                     styles.append("color: red; font-weight: bold")
-            elif yellow_mark_dict.get(row.name) == col:
+            elif yellow_mark_dict.get(row.name, "") == col:
                 styles.append("color: yellow; font-weight: bold")
             else:
                 styles.append("")
         return styles
+    
+    
 
     st.subheader("📋 ตาราง Avg Rate - Upper")
     styled_upper = upper_df.style.apply(
@@ -351,12 +383,29 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
 
     ws = sh.worksheet(selected_sheet)
+    
+    #------------------------- แก้ไข -------------------------------
+    
+    # โหลดไฟล์ Excel เพื่ออ่านค่า current
+    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
+    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
 
-    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
-    
-    
-    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
-    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
+    # อ่านค่าชั่วโมง/วันที่
+    default_hours = float(ws.acell("H1").value or 0)
+    default_prev_date = ws.acell("A2").value or ""
+    default_curr_date = ws.acell("B2").value or ""
+
+    # อ่านค่า Current (Lower = Col C = index 2, Upper = Col F = index 5)
+    lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').fillna(0).tolist()
+    upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').fillna(0).tolist()
+
+    # ⏱️ ชั่วโมง
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=default_hours)
+
+    # 📅 วันที่
+    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY", value=default_prev_date)
+    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY", value=default_curr_date)
+
  
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
@@ -366,11 +415,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         col = cols[i % 8]
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"u{i}", label_visibility="collapsed", placeholder="0.00")
+            value = st.text_input(f"{i+1}", key=f"u{i}", label_visibility="collapsed", placeholder="0.00", value=str(lower_current[i]))
             try:
                 upper.append(float(value))
             except:
                 upper.append(0.0)
+
 
     st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
     lower = []
@@ -379,11 +429,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         col = cols[i % 8]
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"l{i}", label_visibility="collapsed", placeholder="0.00")
+            value = st.text_input(f"{i+1}", key=f"l{i}", label_visibility="collapsed", placeholder="0.00", value=str(upper_current[i]))
             try:
                 lower.append(float(value))
             except:
                 lower.append(0.0)
+
 
     if st.button("📤 บันทึก"):
         try:
@@ -414,8 +465,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         hour_val = selected_ws.acell("H1").value
         
         #เอาไปกรอกใน web
-        st.markdown(f"📆 วันที่ Previous: **`{date_prev}`** | วันที่ Current: **`{date_curr}`**")
-        st.markdown(f"#### ⏱️ ชั่วโมงจาก `{selected_view_sheet}`: `{hour_val}` ชั่วโมง")
+        st.markdown(f"📆 วันที่ Previous: **{date_prev}** | วันที่ Current: **{date_curr}**")
+        st.markdown(f"#### ⏱️ ชั่วโมงจาก {selected_view_sheet}: {hour_val} ชั่วโมง")
 
         df = xls.parse(selected_view_sheet, skiprows=1, header=None)
         
@@ -500,13 +551,21 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # เชื่อมต่อ Google Sheet
+    
+    service_account_info = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
+    
     sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
     
-    
+    #แก้ตรงนี้เพิ่ม
+    sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+    selected_view_sheet = st.selectbox("📌 เลือกชีตที่ต้องการดู", sheet_options)
 
-    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
+    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=8, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
@@ -577,7 +636,6 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             else:
                 avg_col.append(round(np.mean(values), 6) if values else 0.000000)
         return df, avg_col
-    
     
 
     avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
