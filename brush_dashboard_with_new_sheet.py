@@ -414,8 +414,13 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     for i in range(32):
         col = cols[i % 8]
         with col:
-            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"u{i}", label_visibility="collapsed", placeholder="0.00", value=str(lower_current[i]))
+            st.markdown(f"<div style='text-align: center;'>แปรงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
+            value = st.text_input(
+                f"lower_{i+1}",                     # ✅ label ไม่ซ้ำ
+                key=f"lower_input_{i}",             # ✅ key ไม่ซ้ำ
+                label_visibility="collapsed",
+                placeholder="0.00",
+                value=str(lower_current[i]))
             try:
                 upper.append(float(value))
             except:
@@ -425,11 +430,17 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
     lower = []
     cols = st.columns(8)
+# UPPER
     for i in range(32):
         col = cols[i % 8]
         with col:
-            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"l{i}", label_visibility="collapsed", placeholder="0.00", value=str(upper_current[i]))
+            st.markdown(f"<div style='text-align: center;'>แปรงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
+            value = st.text_input(
+                f"upper_{i+1}",                     # ✅ label ไม่ซ้ำ
+                key=f"upper_input_{i}",             # ✅ key ไม่ซ้ำ
+                label_visibility="collapsed",
+                placeholder="0.00",
+                value=str(upper_current[i]))
             try:
                 lower.append(float(value))
             except:
