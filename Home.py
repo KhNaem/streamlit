@@ -44,6 +44,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:sheet_count]
+    
+
 
     import requests
     from io import BytesIO
@@ -124,13 +126,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     
     sheet_index_map = {name: idx + 1 for idx, name in enumerate(selected_sheets)}
+    
+    # กำหนด จำนวนรอบที่ทำให้ rate คงที่ และ เปอร์เซ็นไม่เกินเท่าไร
 
-
+    min_required = 5
+    threshold = 0.1 # คูณด้วย 10 = ... %
 
     def calc_avg_with_flag(
         rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates,
-        permanent_yellow_dict, sheet_index_map, min_required=5, threshold=0.1
-    ):
+        permanent_yellow_dict, sheet_index_map, min_required , threshold):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
@@ -213,6 +217,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             else:
                 styles.append("")
         return styles
+    
+    round_show = min_required
+    percent_show = threshold * 10
+    
+    st.markdown("จำนวนรอบขั้นต่ำที่ทำให้รอบคงที่เท่ากับ", round_show ,"รอบ")
+    st.markdown("จำนวนเปอร์เซ็นที่ทำให้ อัตราการลดลงคงที่ ไม่เกิน ", percent_show ,"%")
+
 
     st.subheader("📋 ตาราง Avg Rate - Upper")
     styled_upper = upper_df.style.apply(
