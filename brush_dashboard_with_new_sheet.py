@@ -425,12 +425,18 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').fillna(0).tolist()
 
     
-    default_hours = float(ws.acell("H1").value or 0)
+    default_hours = float(ws.acell("H1").value or 0.0)
+    
+    try:
+        default_hours = float(ws.acell("H1").value)
+    except:
+        default_hours = 0.0
+        
     default_prev_date = ws.acell("A2").value or ""
     default_curr_date = ws.acell("B2").value or ""
 
 
-    hours = st.number_input("⏱️ ชั่วโมง", ..., value=default_hours)
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=default_hours)
     prev_date = st.text_input(..., value=default_prev_date)
     curr_date = st.text_input(..., value=default_curr_date)
 
