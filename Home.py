@@ -226,6 +226,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
 
+
     st.subheader("📋 ตาราง Avg Rate - Upper")
     styled_upper = upper_df.style.apply(
     lambda row: highlight_fixed_rate_row(row, "Avg Rate (Upper)", permanent_fixed_upper, permanent_yellow_upper),
