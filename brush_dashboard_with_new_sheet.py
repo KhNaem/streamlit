@@ -457,10 +457,17 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
             value = st.text_input(
-            f"lower_{i+1}",                     # ชื่อ label
-            key=f"lower_input_{i}",             # key ไม่ซ้ำ
-            value=str(lower_current[i]),       # ดึงค่าปัจจุบันมาแสดง
-        )
+                label="",  # 👈 ใส่ label เป็นค่าว่าง
+                key=f"lower_input_{i}",
+                value=str(lower_current[i]),
+                label_visibility="collapsed",  # 👈 ซ่อน label แบบสมบูรณ์
+                )
+
+            #value = st.text_input(
+            #f"lower_{i+1}",                     # ชื่อ label
+            #key=f"lower_input_{i}",             # key ไม่ซ้ำ
+            #value=str(lower_current[i]),       # ดึงค่าปัจจุบันมาแสดง
+        #)
             try:
                 lower.append(float(value))
             except:
@@ -474,10 +481,11 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
             value = st.text_input(
-            f"upper_{i+1}",                     # ชื่อ label
-            key=f"upper_input_{i}",             # key ไม่ซ้ำ
-            value=str(upper_current[i]),       # ดึงค่าปัจจุบันมาแสดง
-        )
+                label="",  # 👈 ใส่ label เป็นค่าว่าง
+                key=f"upper_input_{i}",
+                value=str(upper_current[i]),
+                label_visibility="collapsed",  # 👈 ซ่อน label แบบสมบูรณ์
+                )
 
             try:
                 upper.append(float(value))
