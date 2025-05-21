@@ -450,7 +450,6 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
                 new_ws.update_cell(i + 3, 3, lower_current[i])  # C3:C34
                 new_ws.update_cell(i + 3, 6, upper_current[i])  # F3:F34
 
-            sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=new_sheet)
 
             # 👉 โหลดชีตใหม่เพื่อให้แน่ใจว่ามีแล้ว
             sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
