@@ -411,10 +411,17 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
-        index=sheet_names.index(st.session_state.get("selected_sheet_auto", sheet_names[-1])))
+        index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
+    
+        # ดึงเลขชีตล่าสุดก่อนแสดงปุ่ม
+    filtered_sheet_names = [s for s in sheet_names if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    sheet_numbers = [int(s.lower().replace("sheet", "")) for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()]
+    sheet_numbers.sort()
+    next_sheet_name = f"Sheet{sheet_numbers[-1] + 1}" if sheet_numbers else "Sheet2"
+
 
     
-    if st.button("➕ สร้างชีตใหม่จากชีตก่อนหน้า"):
+    if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
         try:
             # ✅ 1. หา sheet ล่าสุด (ยกเว้น Sheet1)
             sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet") and ws.title.lower() != "sheet1"]
