@@ -387,8 +387,19 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.session_state.lower_avg = lower_avg
 
 # --------------------------------------------------- PAGE 2 -------------------------------------------------
+
+
 elif page == "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม":
     st.title("📝 กรอกข้อมูลแปรงถ่าน + ชั่วโมง")
+    
+    import requests
+    from io import BytesIO
+
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+
+    response = requests.get(url)
+    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
 
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
