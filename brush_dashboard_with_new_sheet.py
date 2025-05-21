@@ -401,7 +401,6 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
 
-    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
 
 
     service_account_info = st.secrets["gcp_service_account"]
@@ -417,6 +416,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
     
+    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
     
     
     df_current = xls.parse(selected_sheet, skiprows=2, header=None)
