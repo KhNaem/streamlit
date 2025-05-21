@@ -432,6 +432,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     except:
         default_hours = 0.0
         
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=float(default_hours))
+
+        
     default_prev_date = ws.acell("A2").value or ""
     default_curr_date = ws.acell("B2").value or ""
 
