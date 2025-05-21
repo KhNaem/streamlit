@@ -410,7 +410,45 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
+        index=sheet_names.index(st.session_state.get("selected_sheet_auto", sheet_names[-1])))
+
+    
+    if st.button("➕ สร้างชีตใหม่จากชีตก่อนหน้า"):
+        try:
+            # ✅ 1. หา sheet ล่าสุด (ยกเว้น Sheet1)
+            sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet") and ws.title.lower() != "sheet1"]
+            sheet_numbers = [int(s.lower().replace("sheet", "")) for s in sheet_names if s.lower().replace("sheet", "").isdigit()]
+            sheet_numbers.sort()
+
+            if not sheet_numbers:
+                st.warning("ไม่พบชีตใด ๆ ที่ใช้เป็นต้นฉบับได้ (ยกเว้น Sheet1)")
+                st.stop()
+
+            last_sheet = f"Sheet{sheet_numbers[-1]}"
+            new_sheet = f"Sheet{sheet_numbers[-1] + 1}"
+
+            # ✅ 2. Duplicate sheet
+            source_ws = sh.worksheet(last_sheet)
+            sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=new_sheet)
+
+            # ✅ 3. คัดลอก Current จาก Col C และ F
+            df_prev = source_ws.get_all_values()
+            lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
+            upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
+
+            new_ws = sh.worksheet(new_sheet)
+
+            for i in range(32):
+                new_ws.update_cell(i + 3, 3, lower_current[i])  # C3:C34
+                new_ws.update_cell(i + 3, 6, upper_current[i])  # F3:F34
+
+            # ✅ 4. ตั้งค่า session_state เพื่อเลือก sheet ใหม่ทันที
+            st.session_state["selected_sheet_auto"] = new_sheet
+            st.success(f"✅ สร้าง `{new_sheet}` และคัดลอกค่า Current เรียบร้อยแล้ว")
+
+        except Exception as e:
+            st.error(f"❌ เกิดข้อผิดพลาด: {e}")
 
     ws = sh.worksheet(selected_sheet)
 
