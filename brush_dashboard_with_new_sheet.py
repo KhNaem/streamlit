@@ -423,43 +423,38 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     
     if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
         try:
-            # ✅ 1. หา sheet ล่าสุด (ยกเว้น Sheet1)
             sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet") and ws.title.lower() != "sheet1"]
             sheet_numbers = [int(s.lower().replace("sheet", "")) for s in sheet_names if s.lower().replace("sheet", "").isdigit()]
             sheet_numbers.sort()
 
             if not sheet_numbers:
-                st.warning("ไม่พบชีตใด ๆ ที่ใช้เป็นต้นฉบับได้ (ยกเว้น Sheet1)")
+                st.warning("ไม่พบชีตต้นฉบับที่ใช้งานได้")
                 st.stop()
 
             last_sheet = f"Sheet{sheet_numbers[-1]}"
             new_sheet = f"Sheet{sheet_numbers[-1] + 1}"
 
-            # ✅ 2. Duplicate sheet
             source_ws = sh.worksheet(last_sheet)
-            sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=new_sheet)
-
-            # ✅ 3. คัดลอก Current จาก Col C และ F
             df_prev = source_ws.get_all_values()
             lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
             upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-            new_ws = sh.worksheet(new_sheet)
+            # ✅ สร้างชีตใหม่เปล่า
+            new_ws = sh.add_worksheet(title=new_sheet, rows="100", cols="10")
 
+            # ✅ วางค่าลง C3:C34 และ F3:F34
             for i in range(32):
-                new_ws.update_cell(i + 3, 3, lower_current[i])  # C3:C34
-                new_ws.update_cell(i + 3, 6, upper_current[i])  # F3:F34
+                new_ws.update_cell(i + 3, 3, lower_current[i])
+                new_ws.update_cell(i + 3, 6, upper_current[i])
 
-
-            # 👉 โหลดชีตใหม่เพื่อให้แน่ใจว่ามีแล้ว
-            sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
-
+            # ✅ ให้เลือกชีตใหม่ทันที
             st.session_state["selected_sheet_auto"] = new_sheet
-            st.success(f"✅ สร้าง `{new_sheet}` และคัดลอก Current เรียบร้อยแล้ว")
+            st.success(f"✅ สร้าง {new_sheet} และวางค่าคัดลอกสำเร็จแล้ว")
+            st.experimental_rerun()
 
-            st.experimental_rerun()  # 🔁 โหลดใหม่เพื่ออัปเดตค่าใน selectbox
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+
 
     ws = sh.worksheet(selected_sheet)
 
