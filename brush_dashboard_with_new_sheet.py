@@ -495,12 +495,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
             # ใส่สูตรเป็น cell-by-cell ด้วย update_acell เพื่อหลีกเลี่ยง '= กลายเป็นข้อความ'
             for i in range(32):
-                row = i + 3  # เริ่มที่แถว 3
+                row = i + 3  # เริ่มจาก B3 และ E3
+                lower_cell = rowcol_to_a1(row, 2)  # คอลัมน์ B
+                upper_cell = rowcol_to_a1(row, 5)  # คอลัมน์ E
+
                 lower_formula = f"={last_sheet}!C{row}"
                 upper_formula = f"={last_sheet}!F{row}"
-
-                lower_cell = rowcol_to_a1(row, 2)  # B3, B4, ..., B34
-                upper_cell = rowcol_to_a1(row, 5)  # E3, E4, ..., E34
 
                 new_ws.update_acell(lower_cell, lower_formula)
                 new_ws.update_acell(upper_cell, upper_formula)
