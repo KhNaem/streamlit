@@ -487,7 +487,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
                 st.stop()
 
             # สร้างชีตใหม่
-            new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
+            new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
+
             for i in range(32):
                 new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
                 new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
