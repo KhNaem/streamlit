@@ -444,29 +444,33 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     
     if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
         try:
-            # ✅ ดึงชีตต้นทาง (ล่าสุด)
             last_sheet = f"Sheet{sheet_numbers[-1]}"
             source_ws = sh.worksheet(last_sheet)
             df_prev = source_ws.get_all_values()
 
-            # ✅ คัดลอกค่า current จาก Col C (lower) และ F (upper)
             lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
             upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-            # ✅ สร้างชีตใหม่แบบ add_worksheet
+            # 🔍 เช็คว่าชีตนี้มีอยู่แล้วหรือยัง
+            existing_sheet_titles = [ws.title.lower() for ws in sh.worksheets()]
+            if next_sheet_name.lower() in existing_sheet_titles:
+                st.warning(f"⚠️ Sheet '{next_sheet_name}' มีอยู่แล้ว กรุณาลบหรือเปลี่ยนชื่อก่อนสร้างใหม่")
+                st.stop()
+
+            # ✅ สร้างชีตใหม่
             new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
 
             for i in range(32):
-                new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
-                new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
+                new_ws.update_cell(i + 3, 3, lower_current[i])
+                new_ws.update_cell(i + 3, 6, upper_current[i])
 
-            # ✅ ตั้งให้เลือกชีตใหม่นี้ทันที
             st.session_state["selected_sheet_auto"] = next_sheet_name
-            st.success(f"✅ สร้าง `{next_sheet_name}` และคัดลอก Current สำเร็จแล้ว")
+            st.success(f"✅ สร้าง `{next_sheet_name}` และคัดลอกค่าเรียบร้อยแล้ว")
             st.experimental_rerun()
 
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+
 
 
 
