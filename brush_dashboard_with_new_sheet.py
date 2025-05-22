@@ -495,7 +495,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
-            st.experimental_rerun()
+            st.rerun()
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
 
