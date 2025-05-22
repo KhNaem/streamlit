@@ -409,7 +409,30 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+    # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
+    sheet_names_all = [ws.title for ws in sh.worksheets()]
+    filtered_sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+
+    # ✅ 2. ดึงตัวเลขของ SheetN
+    sheet_numbers = []
+    for name in filtered_sheet_names:
+        suffix = name.lower().replace("sheet", "")
+        if suffix.isdigit():
+            sheet_numbers.append(int(suffix))
+
+    sheet_numbers.sort()
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
+
+    # ✅ 3. ตั้งค่าชีตเริ่มต้น
+    sheet_names = sorted(set([s for s in sheet_names_all if s.lower().startswith("sheet")]))
+    selected_sheet = st.selectbox(
+        "📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",
+        sheet_names,
+        index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
+
+    
+
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
         index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
     
@@ -423,37 +446,30 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     
     if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
         try:
-            sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet") and ws.title.lower() != "sheet1"]
-            sheet_numbers = [int(s.lower().replace("sheet", "")) for s in sheet_names if s.lower().replace("sheet", "").isdigit()]
-            sheet_numbers.sort()
-
-            if not sheet_numbers:
-                st.warning("ไม่พบชีตต้นฉบับที่ใช้งานได้")
-                st.stop()
-
+            # ✅ ดึงชีตต้นทาง (ล่าสุด)
             last_sheet = f"Sheet{sheet_numbers[-1]}"
-            new_sheet = f"Sheet{sheet_numbers[-1] + 1}"
-
             source_ws = sh.worksheet(last_sheet)
             df_prev = source_ws.get_all_values()
+
+            # ✅ คัดลอกค่า current จาก Col C (lower) และ F (upper)
             lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
             upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-            # ✅ สร้างชีตใหม่เปล่า
-            new_ws = sh.add_worksheet(title=new_sheet, rows="100", cols="10")
+            # ✅ สร้างชีตใหม่แบบ add_worksheet
+            new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
 
-            # ✅ วางค่าลง C3:C34 และ F3:F34
             for i in range(32):
-                new_ws.update_cell(i + 3, 3, lower_current[i])
-                new_ws.update_cell(i + 3, 6, upper_current[i])
+                new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
+                new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
 
-            # ✅ ให้เลือกชีตใหม่ทันที
-            st.session_state["selected_sheet_auto"] = new_sheet
-            st.success(f"✅ สร้าง {new_sheet} และวางค่าคัดลอกสำเร็จแล้ว")
+            # ✅ ตั้งให้เลือกชีตใหม่นี้ทันที
+            st.session_state["selected_sheet_auto"] = next_sheet_name
+            st.success(f"✅ สร้าง `{next_sheet_name}` และคัดลอก Current สำเร็จแล้ว")
             st.experimental_rerun()
 
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+
 
 
     ws = sh.worksheet(selected_sheet)
