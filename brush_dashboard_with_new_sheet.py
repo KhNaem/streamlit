@@ -496,14 +496,18 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
             # ใส่สูตรเป็น cell-by-cell ด้วย update_acell เพื่อหลีกเลี่ยง '= กลายเป็นข้อความ'
             for i in range(32):
-                row = i + 3
-                lower_formula = f"=Sheet{sheet_numbers[-1]}!C{row}"
-                upper_formula = f"=Sheet{sheet_numbers[-1]}!F{row}"
+                row = i + 3  # เริ่มจาก B3 และ E3
+                lower_cell = rowcol_to_a1(row, 2)  # คอลัมน์ B
+                upper_cell = rowcol_to_a1(row, 5)  # คอลัมน์ E
 
-                new_ws.update_acell(f"B{row}", lower_formula)
-                new_ws.update_acell(f"E{row}", upper_formula)
+                #lower_formula = f"={last_sheet}!C{row}"
+                #upper_formula = f"={last_sheet}!F{row}"
 
-                time.sleep(0.5)  # ลดเหลือ 0.5 วินาที/ครั้ง แต่อย่าลดต่ำกว่านี้มาก
+                new_ws.update_acell(lower_cell)
+                new_ws.update_acell(upper_cell)
+
+                if i % 10 == 0:
+                    time.sleep(2)  # พัก 2 วินาทีทุก 10 แถว
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
