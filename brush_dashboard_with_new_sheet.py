@@ -507,12 +507,6 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             import time
 
             for i in range(32):
-                row = i + 3
-                lower_formula = f"='{last_sheet}'!C{row}"
-                upper_formula = f"='{last_sheet}'!F{row}"
-
-                new_ws.update_acell(f"B{row}", lower_formula)
-                new_ws.update_acell(f"E{row}", upper_formula)
 
                 if i % 10 == 0:
                     time.sleep(2)
