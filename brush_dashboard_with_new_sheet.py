@@ -457,39 +457,40 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     sheet_numbers.sort()
     next_sheet_name = f"Sheet{sheet_numbers[-1] + 1}" if sheet_numbers else "Sheet2"
 
+    # 📌 คำนวณชื่อชีตใหม่ (SheetN+1)
+    filtered_sheet_names = [s for s in sheet_names if s.lower() != "sheet1"]
+    sheet_numbers = [int(s.lower().replace("sheet", "")) for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()]
+    sheet_numbers.sort()
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
 
-    
-    # ปุ่มสร้างชีตใหม่
+    # 📦 ปุ่มสร้างชีตใหม่
     if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
         try:
-            # ใช้ SheetN ที่มากที่สุดเป็นแหล่งคัดลอก
+            # ใช้ sheet ล่าสุดเป็นต้นแบบ
             last_sheet = f"Sheet{sheet_numbers[-1]}"
             source_ws = sh.worksheet(last_sheet)
             df_prev = source_ws.get_all_values()
 
-            # เตรียมค่าจากชีตเดิม
+            # คัดลอกค่า current
             lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
             upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-            # ตรวจสอบชื่อซ้ำก่อนสร้าง
-            existing_titles = [ws.title.lower() for ws in sh.worksheets()]
-            if next_sheet_name.lower() in existing_titles:
+            # ตรวจว่าชีตนี้มีอยู่แล้วหรือไม่
+            if next_sheet_name.lower() in [ws.title.lower() for ws in sh.worksheets()]:
                 st.warning(f"⚠️ Sheet '{next_sheet_name}' มีอยู่แล้ว")
                 st.stop()
 
-            # สร้างชีตใหม่และใส่ค่า
+            # สร้างชีตใหม่
             new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
             for i in range(32):
                 new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
                 new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
 
-            # กำหนดให้เลือกชีตใหม่นี้อัตโนมัติ และ reload หน้า
-            st.session_state["selected_sheet_auto"] = next_sheet_name
-            st.success(f"✅ สร้าง `{next_sheet_name}` เรียบร้อยแล้ว 🎉")
+            st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
             st.experimental_rerun()
-
         except Exception as e:
-            st.error(f"❌ เกิดข้อผิดพลาดขณะสร้างชีต: {e}")
+            st.error(f"❌ เกิดข้อผิดพลาด: {e}")
 
 
 
