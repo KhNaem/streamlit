@@ -465,7 +465,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     next_sheet_name = f"Sheet{next_sheet_number}"
 
     # 📦 ปุ่มสร้างชีตใหม่
-    if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
+    if st.button(f"➕ สร้างชีตที่ {next_sheet_name} "):
         try:
             # ใช้ sheet ล่าสุดเป็นต้นแบบ
             last_sheet = f"Sheet{sheet_numbers[-1]}"
@@ -487,6 +487,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
                 new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
                 new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
 
+            st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
             st.experimental_rerun()
         except Exception as e:
