@@ -480,6 +480,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             # คัดลอกค่า current
             lower_previous_formulas = [[f"={last_sheet}!C{i+3}"] for i in range(32)]
             upper_previous_formulas = [[f"={last_sheet}!F{i+3}"] for i in range(32)]
+            
 
             # ตรวจว่าชีตนี้มีอยู่แล้วหรือไม่
             if next_sheet_name.lower() in [ws.title.lower() for ws in sh.worksheets()]:
@@ -489,24 +490,33 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             # สร้างชีตใหม่
             new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
             
+                        # ใส่สูตรแบบทั้งช่วงในคราวเดียว (เร็วและไม่ quota เต็มง่าย)
+            new_ws.update("B3:B34", lower_previous_formulas)
+            new_ws.update("E3:E34", upper_previous_formulas)
             
+            
+            try:
+                new_ws.update("B3:B34", lower_previous_formulas)
+                new_ws.update("E3:E34", upper_previous_formulas)
+            except Exception as e:
+                st.error(f"❌ เกิดข้อผิดพลาดขณะใส่สูตร: {e}")
+
 
             from gspread.utils import rowcol_to_a1
+            
             import time
 
             for i in range(32):
-                row = i + 3  # เริ่มจาก B3, E3
-                lower_cell = rowcol_to_a1(row, 2)  # B
-                upper_cell = rowcol_to_a1(row, 5)  # E
-
+                row = i + 3
                 lower_formula = f"='{last_sheet}'!C{row}"
                 upper_formula = f"='{last_sheet}'!F{row}"
 
-                new_ws.update_acell(lower_cell, lower_formula)
-                new_ws.update_acell(upper_cell, upper_formula)
+                new_ws.update_acell(f"B{row}", lower_formula)
+                new_ws.update_acell(f"E{row}", upper_formula)
 
                 if i % 10 == 0:
                     time.sleep(2)
+
 
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
