@@ -490,9 +490,11 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             # สร้างชีตใหม่
             new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
             
-                        # ใส่สูตรแบบทั้งช่วงในคราวเดียว (เร็วและไม่ quota เต็มง่าย)
-            new_ws.update("B3:B34", lower_previous_formulas)
-            new_ws.update("E3:E34", upper_previous_formulas)
+                       
+                        
+            # วางสูตร (ระบุ USER_ENTERED เพื่อให้เป็นสูตร)
+            new_ws.update("B3:B34", lower_previous_formulas, value_input_option="USER_ENTERED")
+            new_ws.update("E3:E34", upper_previous_formulas, value_input_option="USER_ENTERED")
             
             
             try:
