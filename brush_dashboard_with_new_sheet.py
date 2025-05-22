@@ -410,7 +410,24 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
+
+
     sheet_names_all = [ws.title for ws in sh.worksheets()]
+
+    def extract_sheet_number(name):
+        try:
+            return int(name.lower().replace("sheet", ""))
+        except:
+            return float("inf")
+
+    sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet")]
+    sheet_names_sorted = sorted(sheet_names, key=extract_sheet_number)
+    if "Sheet1" in sheet_names_sorted:
+        sheet_names_sorted.remove("Sheet1")
+        sheet_names_sorted = ["Sheet1"] + sheet_names_sorted
+
+    sheet_names = sheet_names_sorted
+
     filtered_sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
 
     # ✅ 2. ดึงตัวเลขของ SheetN
@@ -456,7 +473,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     if selected_sheet_auto not in sheet_names:
         selected_sheet_auto = sheet_names[0]  # fallback เผื่อ sheet ใหม่ยังไม่เจอทัน
 
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names, index=sheet_names.index(selected_sheet_auto))
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
 
     st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
     st.write(f"🧪 Dropdown Options: {sheet_names}")
