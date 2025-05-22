@@ -433,9 +433,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     
 
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
-        index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
-    
+
         # ดึงเลขชีตล่าสุดก่อนแสดงปุ่ม
     filtered_sheet_names = [s for s in sheet_names if s.lower().startswith("sheet") and s.lower() != "sheet1"]
     sheet_numbers = [int(s.lower().replace("sheet", "")) for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()]
