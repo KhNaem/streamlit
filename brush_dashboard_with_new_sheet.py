@@ -99,7 +99,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
     min_required = 5
-    threshold = 0.1 # คูณด้วย 10 = ... %
+    threshold = 0.05 # คูณด้วย 10 = ... %
 
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
@@ -219,7 +219,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
     
     round_show = min_required
-    percent_show = threshold * 10
+    percent_show = threshold * 100
     
     
     #
