@@ -425,7 +425,6 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     next_sheet_name = f"Sheet{next_sheet_number}"
 
     # ✅ 3. ตั้งค่าชีตเริ่มต้น
-    sheet_names_all = [ws.title for ws in sh.worksheets()]
     sheet_names = sorted(set([s for s in sheet_names_all if s.lower().startswith("sheet")]))
 
     filtered_sheet_names = [s for s in sheet_names if s.lower() != "sheet1"]
@@ -437,13 +436,19 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
     next_sheet_name = f"Sheet{next_sheet_number}"
+    
+    selected_sheet_auto = st.session_state.get("selected_sheet_auto", "Sheet1")
+    if selected_sheet_auto not in sheet_names:
+        selected_sheet_auto = sheet_names[0]  # fallback เผื่อ sheet ใหม่ยังไม่เจอทัน
 
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
-        index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names, index=sheet_names.index(selected_sheet_auto))
+
+    st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
+    st.write(f"🧪 Dropdown Options: {sheet_names}")
+   
 
         # ✅ เตรียมชื่อชีตถัดไป (เช่น Sheet13)
-    sheet_names_all = [ws.title for ws in sh.worksheets()]
-    filtered_sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    
     
     next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
     next_sheet_name = f"Sheet{next_sheet_number}"
