@@ -494,20 +494,20 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             from gspread.utils import rowcol_to_a1
             import time
 
-            # ใส่สูตรเป็น cell-by-cell ด้วย update_acell เพื่อหลีกเลี่ยง '= กลายเป็นข้อความ'
             for i in range(32):
-                row = i + 3  # เริ่มจาก B3 และ E3
-                lower_cell = rowcol_to_a1(row, 2)  # คอลัมน์ B
-                upper_cell = rowcol_to_a1(row, 5)  # คอลัมน์ E
+                row = i + 3  # เริ่มจาก B3, E3
+                lower_cell = rowcol_to_a1(row, 2)  # B
+                upper_cell = rowcol_to_a1(row, 5)  # E
 
-                #lower_formula = f"={last_sheet}!C{row}"
-                #upper_formula = f"={last_sheet}!F{row}"
+                lower_formula = f"='{last_sheet}'!C{row}"
+                upper_formula = f"='{last_sheet}'!F{row}"
 
-                new_ws.update_acell(lower_cell)
-                new_ws.update_acell(upper_cell)
+                new_ws.update_acell(lower_cell, lower_formula)
+                new_ws.update_acell(upper_cell, upper_formula)
 
                 if i % 10 == 0:
-                    time.sleep(2)  # พัก 2 วินาทีทุก 10 แถว
+                    time.sleep(2)
+
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
@@ -595,10 +595,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             ws.update("A2", [[prev_date]])
             ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
-            #ws.update("F3:F34", [[v] for v in lower])
-            #ws.update("C3:C34", [[v] for v in upper])
-            ws.update("C3:C34", [[v] for v in lower])
-            ws.update("F3:F34", [[v] for v in upper])
+
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
             st.error(f"❌ {e}")
