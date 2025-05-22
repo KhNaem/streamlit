@@ -490,6 +490,14 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             # สร้างชีตใหม่
             new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
             
+            sheets = sh.worksheets()
+            new_ws = sh.worksheet(next_sheet_name)
+            # ย้าย sheet ไปท้ายสุด
+            sheets.remove(new_ws)
+            sheets.append(new_ws)
+            sh.reorder_worksheets(sheets)
+
+            
                        
                         
             # วางสูตร (ระบุ USER_ENTERED เพื่อให้เป็นสูตร)
