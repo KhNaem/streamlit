@@ -459,32 +459,32 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
 
     
-if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
-    try:
-        source_ws = sh.worksheet(f"Sheet{sheet_numbers[-1]}")
-        df_prev = source_ws.get_all_values()
+    if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
+        try:
+            source_ws = sh.worksheet(f"Sheet{sheet_numbers[-1]}")
+            df_prev = source_ws.get_all_values()
 
-        lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
-        upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
+            lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
+            upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-        # ✅ เช็คชื่อซ้ำ
-        existing_titles = [ws.title.lower() for ws in sh.worksheets()]
-        if next_sheet_name.lower() in existing_titles:
-            st.warning(f"⚠️ Sheet '{next_sheet_name}' มีอยู่แล้ว")
-            st.stop()
+            # ✅ เช็คชื่อซ้ำ
+            existing_titles = [ws.title.lower() for ws in sh.worksheets()]
+            if next_sheet_name.lower() in existing_titles:
+                st.warning(f"⚠️ Sheet '{next_sheet_name}' มีอยู่แล้ว")
+                st.stop()
 
-        # ✅ สร้างชีตใหม่
-        new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
-        for i in range(32):
-            new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
-            new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
+            # ✅ สร้างชีตใหม่
+            new_ws = sh.add_worksheet(title=next_sheet_name, rows="100", cols="10")
+            for i in range(32):
+                new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
+                new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
 
-        st.session_state["selected_sheet_auto"] = next_sheet_name
-        st.success(f"✅ สร้าง `{next_sheet_name}` สำเร็จแล้ว")
-        st.experimental_rerun()
+            st.session_state["selected_sheet_auto"] = next_sheet_name
+            st.success(f"✅ สร้าง `{next_sheet_name}` สำเร็จแล้ว")
+            st.experimental_rerun()
 
-    except Exception as e:
-        st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+        except Exception as e:
+            st.error(f"❌ เกิดข้อผิดพลาด: {e}")
 
 
 
