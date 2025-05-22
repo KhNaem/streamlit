@@ -490,28 +490,18 @@ if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จาก
 
 
 
+    # โหลดค่าทันทีจาก selected_sheet
     ws = sh.worksheet(selected_sheet)
+    df_prev = ws.get_all_values()
 
-    
-    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
-    
-    
-    df_current = xls.parse(selected_sheet, skiprows=2, header=None)
+    lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
+    upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
 
-    lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').fillna(0).tolist()
-    upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').fillna(0).tolist()
-
-    
-    default_hours = float(ws.acell("H1").value or 0.0)
-    
+    # โหลดชั่วโมง/วัน
     try:
-        default_hours = float(ws.acell("H1").value)
+        default_hours = float(ws.acell("H1").value or 0)
     except:
         default_hours = 0.0
-        
- 
-
-        
     default_prev_date = ws.acell("A2").value or ""
     default_curr_date = ws.acell("B2").value or ""
 
