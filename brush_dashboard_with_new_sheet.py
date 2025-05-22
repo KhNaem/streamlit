@@ -475,8 +475,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names_sorted)
 
-    st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
-    st.write(f"🧪 Dropdown Options: {sheet_names}")
+    #st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
+    #st.write(f"🧪 Dropdown Options: {sheet_names}")
    
 
         # ✅ เตรียมชื่อชีตถัดไป (เช่น Sheet13)
