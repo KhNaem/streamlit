@@ -498,8 +498,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             
             
             try:
-                new_ws.update("B3:B34", lower_previous_formulas)
-                new_ws.update("E3:E34", upper_previous_formulas)
+                new_ws.update("B3:B34", lower_previous_formulas, value_input_option="USER_ENTERED")
+                new_ws.update("E3:E34", upper_previous_formulas, value_input_option="USER_ENTERED")
             except Exception as e:
                 st.error(f"❌ เกิดข้อผิดพลาดขณะใส่สูตร: {e}")
 
