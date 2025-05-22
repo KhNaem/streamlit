@@ -98,8 +98,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
 
     # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
+    min_required = 5
+    threshold = 0.1 # คูณด้วย 10 = ... %
 
-    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.05):
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
             avg_rate = sum(previous_rates) / len(previous_rates)
@@ -129,8 +131,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     # กำหนด จำนวนรอบที่ทำให้ rate คงที่ และ เปอร์เซ็นไม่เกินเท่าไร
 
-    min_required = 5
-    threshold = 0.1 # คูณด้วย 10 = ... %
 
     def calc_avg_with_flag(
         rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates,
@@ -219,7 +219,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
     
     round_show = min_required
-    percent_show = threshold * 100
+    percent_show = threshold * 10
     
     
     #
