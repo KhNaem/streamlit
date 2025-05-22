@@ -488,10 +488,23 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
             # สร้างชีตใหม่
             new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
+            
+            
 
+            from gspread.utils import rowcol_to_a1
+
+            # ใส่สูตรเป็น cell-by-cell ด้วย update_acell เพื่อหลีกเลี่ยง '= กลายเป็นข้อความ'
             for i in range(32):
-                new_ws.update("B3:B34", lower_previous_formulas)
-                new_ws.update("E3:E34", upper_previous_formulas)
+                row = i + 3  # เริ่มที่แถว 3
+                lower_formula = f"={last_sheet}!C{row}"
+                upper_formula = f"={last_sheet}!F{row}"
+
+                lower_cell = rowcol_to_a1(row, 2)  # B3, B4, ..., B34
+                upper_cell = rowcol_to_a1(row, 5)  # E3, E4, ..., E34
+
+                new_ws.update_acell(lower_cell, lower_formula)
+                new_ws.update_acell(upper_cell, upper_formula)
+
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
