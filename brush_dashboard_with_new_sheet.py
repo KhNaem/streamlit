@@ -493,7 +493,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             sheets = sh.worksheets()
             new_ws = sh.worksheet(next_sheet_name)
             # ย้าย sheet ไปท้ายสุด
-            sheets.remove(new_ws)
+            sheets = [ws for ws in sheets if ws.title != next_sheet_name]
             sheets.append(new_ws)
             sh.reorder_worksheets(sheets)
 
