@@ -763,8 +763,14 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         return df, avg_col
     
 
-    avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
-    avg_rate_lower = st.session_state.get("lower_avg", [0]*32)
+    # ใช้ calc_avg_with_flag ที่คุณมีอยู่แล้ว
+    rate_fixed_upper = set()
+    rate_fixed_lower = set()
+    yellow_mark_upper = {}
+    yellow_mark_lower = {}
+
+    upper_df, avg_rate_upper = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
+    lower_df, avg_rate_lower = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
 
 
 
