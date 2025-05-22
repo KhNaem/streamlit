@@ -441,6 +441,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล",sheet_names,
         index=sheet_names.index(st.session_state.get("selected_sheet_auto", "Sheet1")))
 
+        # ✅ เตรียมชื่อชีตถัดไป (เช่น Sheet13)
+    sheet_names_all = [ws.title for ws in sh.worksheets()]
+    filtered_sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
 
     
 
@@ -455,8 +461,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     
 if st.button(f"➕ สร้างชีตที่ {next_sheet_name} จากชีตก่อนหน้า"):
     try:
-        last_sheet = f"Sheet{sheet_numbers[-1]}"
-        source_ws = sh.worksheet(last_sheet)
+        source_ws = sh.worksheet(f"Sheet{sheet_numbers[-1]}")
         df_prev = source_ws.get_all_values()
 
         lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
