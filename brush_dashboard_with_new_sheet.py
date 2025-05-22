@@ -219,7 +219,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
     
     round_show = min_required
-    percent_show = threshold * 10
+    percent_show = threshold * 100
     
     
     #
