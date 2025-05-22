@@ -478,8 +478,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             df_prev = source_ws.get_all_values()
 
             # คัดลอกค่า current
-            lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
-            upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
+            lower_previous_formulas = [[f"={last_sheet}!C{i+3}"] for i in range(32)]
+            upper_previous_formulas = [[f"={last_sheet}!F{i+3}"] for i in range(32)]
 
             # ตรวจว่าชีตนี้มีอยู่แล้วหรือไม่
             if next_sheet_name.lower() in [ws.title.lower() for ws in sh.worksheets()]:
@@ -490,8 +490,8 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
 
             for i in range(32):
-                new_ws.update_cell(i + 3, 3, lower_current[i])  # Col C
-                new_ws.update_cell(i + 3, 6, upper_current[i])  # Col F
+                new_ws.update("B3:B34", lower_previous_formulas)
+                new_ws.update("E3:E34", upper_previous_formulas)
 
             st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
             st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
