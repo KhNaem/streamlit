@@ -473,7 +473,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     if selected_sheet_auto not in sheet_names:
         selected_sheet_auto = sheet_names[0]  # fallback เผื่อ sheet ใหม่ยังไม่เจอทัน
 
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names_sorted)
 
     st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
     st.write(f"🧪 Dropdown Options: {sheet_names}")
