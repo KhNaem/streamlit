@@ -424,9 +424,24 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
     next_sheet_name = f"Sheet{next_sheet_number}"
 
-    # ✅ 3. ตั้งค่าชีตเริ่มต้น
-    sheet_names = sorted(set([s for s in sheet_names_all if s.lower().startswith("sheet")]))
+    # ทำให้ sheet มีการเรียงกัน
+    def extract_sheet_number(name):
+        try:
+            return int(name.lower().replace("sheet", ""))
+        except:
+            return float('inf')  # สำหรับกรณีชื่อไม่ใช่ตัวเลข
 
+    sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet")]
+    sheet_names_sorted = sorted(sheet_names, key=extract_sheet_number)
+
+    # ถ้าอยากให้ Sheet1 อยู่บนสุดเสมอ:
+    if "Sheet1" in sheet_names_sorted:
+        sheet_names_sorted.remove("Sheet1")
+        sheet_names_sorted = ["Sheet1"] + sheet_names_sorted
+
+    sheet_names = sheet_names_sorted
+    
+    
     filtered_sheet_names = [s for s in sheet_names if s.lower() != "sheet1"]
     sheet_numbers = [
         int(s.lower().replace("sheet", "")) 
