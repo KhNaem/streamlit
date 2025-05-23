@@ -24,7 +24,7 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
-# https://docs.google.com/spreadsheets/d/1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw/edit?usp=sharing
+# https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing
 
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
@@ -34,7 +34,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw/edit?usp=sharing"
+    sheet_url = "https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
 
     sheet_names = [ws.title for ws in sh.worksheets()]
@@ -50,7 +50,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_id = "1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw"
+    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 
     response = requests.get(sheet_url_export)
@@ -97,8 +97,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
-   # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
- # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
+    # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
+    # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
     min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value="5")
     threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value="5.0")
 
@@ -409,7 +409,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
     import requests
 
-    sheet_id = "1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw"
+    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(url)
 
@@ -420,7 +420,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw/edit?usp=sharing")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
@@ -663,10 +663,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
     
-    # เชื่อมต่อ Google Sheet
-    sheet_id = "1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw"
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url)
+    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    xls = pd.ExcelFile(sheet_url_export)
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
@@ -768,7 +767,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # เชื่อมต่อ Google Sheet
-    sheet_id = "1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw"
+    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
     
