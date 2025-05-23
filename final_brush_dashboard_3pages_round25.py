@@ -318,10 +318,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     for i, hour in enumerate(hour_upper):
         if hour < 100 and hour > 0:
             send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
+            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
 
     for i, hour in enumerate(hour_lower):
         if hour < 100 and hour > 0:
             send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
+            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
 
     
     
