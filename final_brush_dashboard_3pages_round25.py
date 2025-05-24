@@ -290,55 +290,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     
     
-    #---------------------------------------- line chat bot --------------------------------
-    
-    
-    
-    # 🔔 เกณฑ์ชั่วโมงที่ต้องการให้แจ้งเตือนผ่าน LINE (default = 50)
-    alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=50, step=1)
-    
-        # ใส่ TOKEN และ userId ตรงนี้
-    LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
-    USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
-
-    def send_line_alert(user_id, access_token, message):
-        url = 'https://api.line.me/v2/bot/message/push'
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {access_token}'
-        }
-        body = {
-            "to": user_id,
-            "messages": [{"type": "text", "text": message}]
-        }
-        try:
-            r = requests.post(url, headers=headers, json=body)
-            if r.status_code != 200:
-                print("❌ LINE Error:", r.text)
-        except Exception as e:
-            print("❌ Exception while sending LINE:", e)
-
-    # 🔔 แจ้งเตือน hour ต่ำกว่า 100
-    for i, hour in enumerate(hour_upper):
-        if hour < alert_threshold_hours and hour > 0:
-            send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
-            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
-
-
-    for i, hour in enumerate(hour_lower):
-        if hour < alert_threshold_hours and hour > 0:
-            send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
-            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
-
-
-    
-    
-    
-    
-    
-    
-    
-    #-------------------------------------------------------------------------------------
     
     
     
@@ -454,6 +405,57 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             "Remaining Hours Lower": hour_lower,
         })
         st.dataframe(result_df, use_container_width=True)
+        
+        #---------------------------------------- line chat bot --------------------------------
+    
+    
+    
+        # 🔔 เกณฑ์ชั่วโมงที่ต้องการให้แจ้งเตือนผ่าน LINE (default = 50)
+        alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=50, step=1)
+        
+            # ใส่ TOKEN และ userId ตรงนี้
+        LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
+        USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
+
+        def send_line_alert(user_id, access_token, message):
+            url = 'https://api.line.me/v2/bot/message/push'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {access_token}'
+            }
+            body = {
+                "to": user_id,
+                "messages": [{"type": "text", "text": message}]
+            }
+            try:
+                r = requests.post(url, headers=headers, json=body)
+                if r.status_code != 200:
+                    print("❌ LINE Error:", r.text)
+            except Exception as e:
+                print("❌ Exception while sending LINE:", e)
+
+        # 🔔 แจ้งเตือน hour ต่ำกว่า 100
+        for i, hour in enumerate(hour_upper):
+            if hour < alert_threshold_hours and hour > 0:
+                send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
+                st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+        for i, hour in enumerate(hour_lower):
+            if hour < alert_threshold_hours and hour > 0:
+                send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
+                st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+    
+    
+    
+    
+    
+    
+    
+    #-------------------------------------------------------------------------------------
+    
 
         st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
