@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+
+
 permanent_fixed_upper = {}
 permanent_fixed_lower = {}
 permanent_yellow_upper = {}
@@ -25,10 +27,36 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
 
+def load_config_from_sheet(sh, sheet_name):
+    try:
+        ws = sh.worksheet(sheet_name)
+        sheet_count = int(ws.acell("B41").value)
+        min_required = int(ws.acell("B42").value)
+        threshold_percent = float(ws.acell("B43").value)
+        alert_threshold_hours = int(ws.acell("B44").value)
+        return sheet_count, min_required, threshold_percent, alert_threshold_hours
+    except:
+        return 7, 5, 5.0, 50  # fallback default
+
+
+def save_config_to_sheet(sh, sheet_name, sheet_count, min_required, threshold_percent, alert_threshold_hours):
+    try:
+        ws = sh.worksheet(sheet_name)
+        ws.update("B41", [[sheet_count]])
+        ws.update("B42", [[min_required]])
+        ws.update("B43", [[threshold_percent]])
+        ws.update("B44", [[alert_threshold_hours]])
+    except Exception as e:
+        st.error(f"❌ ไม่สามารถบันทึก config ลงชีตได้: {e}")
+
+
+
 
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
+    
+   
 
     # Setup credentials and spreadsheet access
     service_account_info = st.secrets["gcp_service_account"]
@@ -36,13 +64,17 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     gc = gspread.authorize(creds)
     sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
+    
+    # โหลดค่าจาก Google Sheet (B41-B44)
+    sheet_count, min_required, threshold_percent, alert_threshold_hours = load_config_from_sheet(sh, "Sheet1")
 
     sheet_names = [ws.title for ws in sh.worksheets()]
     if "Sheet1" in sheet_names:
         sheet_names.remove("Sheet1")
         sheet_names = ["Sheet1"] + sheet_names
 
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=sheet_count)
+
     selected_sheets = sheet_names[:sheet_count]
     
 
@@ -100,21 +132,22 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
  
     # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
  # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
-    min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value="5")
-    threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value="5.0")
+    min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value=str(min_required))
+    threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value=str(threshold_percent))
 
-    # แปลง string เป็นตัวเลข (ระวัง error)
+    # แปลงค่าที่กรอก
     try:
         min_required = int(min_required_str)
     except:
-        min_required = 5  # fallback
+        min_required = 5
 
     try:
         threshold_percent = float(threshold_percent_str)
     except:
         threshold_percent = 5.0
 
-    threshold = threshold_percent / 100  # แปลงเป็นค่าเชิงทศนิยม
+    threshold = threshold_percent / 100
+
 
 
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
@@ -286,8 +319,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     
     
-    
-    
+    # บันทึกค่าลง Google Sheet
+    save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours)
     
     
     
@@ -411,8 +444,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     
         # 🔔 เกณฑ์ชั่วโมงที่ต้องการให้แจ้งเตือนผ่าน LINE (default = 50)
-        alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=50, step=1)
-        
+        alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=alert_threshold_hours)        
             # ใส่ TOKEN และ userId ตรงนี้
         LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
         USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
