@@ -293,6 +293,10 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     #---------------------------------------- line chat bot --------------------------------
     
     
+    
+    # 🔔 เกณฑ์ชั่วโมงที่ต้องการให้แจ้งเตือนผ่าน LINE (default = 50)
+    alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=50, step=1)
+    
         # ใส่ TOKEN และ userId ตรงนี้
     LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
     USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
@@ -316,13 +320,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     # 🔔 แจ้งเตือน hour ต่ำกว่า 100
     for i, hour in enumerate(hour_upper):
-        if hour < 100 and hour > 0:
+        if hour < alert_threshold_hours and hour > 0:
             send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
             st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
 
 
     for i, hour in enumerate(hour_lower):
-        if hour < 100 and hour > 0:
+        if hour < alert_threshold_hours and hour > 0:
             send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
             st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
 
