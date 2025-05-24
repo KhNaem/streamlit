@@ -34,18 +34,21 @@ def load_config_from_sheet(sh, sheet_name):
         min_required = int(ws.acell("B42").value)
         threshold_percent = float(ws.acell("B43").value)
         alert_threshold_hours = int(ws.acell("B44").value)
-        return sheet_count, min_required, threshold_percent, alert_threshold_hours
+        length_threshold = float(ws.acell("B45").value)
+        return sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold
     except:
         return 7, 5, 5.0, 50  # fallback default
 
 
-def save_config_to_sheet(sh, sheet_name, sheet_count, min_required, threshold_percent, alert_threshold_hours):
+def save_config_to_sheet(sh, sheet_name, sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold):
     try:
         ws = sh.worksheet(sheet_name)
         ws.update("B41", [[sheet_count]])
         ws.update("B42", [[min_required]])
         ws.update("B43", [[threshold_percent]])
         ws.update("B44", [[alert_threshold_hours]])
+        ws.update("B45", [[length_threshold]])
+
     except Exception as e:
         st.error(f"❌ ไม่สามารถบันทึก config ลงชีตได้: {e}")
 
@@ -66,7 +69,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sh = gc.open_by_url(sheet_url)
     
     # โหลดค่าจาก Google Sheet (B41-B44)
-    sheet_count, min_required, threshold_percent, alert_threshold_hours = load_config_from_sheet(sh, "Sheet1")
+    sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold = load_config_from_sheet(sh, "Sheet1")
 
     sheet_names = [ws.title for ws in sh.worksheets()]
     if "Sheet1" in sheet_names:
@@ -310,11 +313,12 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
             lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
 
-    def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+    def calculate_hours_safe(current, rate, threshold):
+        return [(c - threshold) / r if pd.notna(c) and r and r > 0 and c > threshold else 0 for c, r in zip(current, rate)]
 
-    hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
-    hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+    hour_upper = calculate_hours_safe(upper_current, avg_rate_upper, length_threshold)
+    hour_lower = calculate_hours_safe(lower_current, avg_rate_lower, length_threshold)
+
     
     
     
@@ -420,11 +424,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').values
         lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').values
 
-        def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+        def calculate_hours_safe(current, rate, threshold):
+            return [(c - threshold) / r if pd.notna(c) and r and r > 0 and c > threshold else 0 for c, r in zip(current, rate)]
 
-        hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
-        hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+
+        hour_upper = calculate_hours_safe(upper_current, avg_rate_upper, length_threshold)
+        hour_lower = calculate_hours_safe(lower_current, avg_rate_lower, length_threshold)
+
+        #ให้กรอกค่า input ใน google sheet range brush to need notify
+        length_threshold = st.number_input("📏 ความยาวที่ต้องการให้แจ้งเตือน (mm)", min_value=30.0, max_value=50.0, value=length_threshold, step=0.5)
 
         st.subheader("📋 ตารางผลการคำนวณ")
         result_df = pd.DataFrame({
@@ -491,7 +499,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     
     # บันทึกค่าลง Google Sheet
-        save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours)
+        save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours, length_threshold)
+
         
         
         st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
