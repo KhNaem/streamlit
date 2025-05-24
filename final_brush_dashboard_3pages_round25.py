@@ -427,12 +427,12 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         def calculate_hours_safe(current, rate, threshold):
             return [(c - threshold) / r if pd.notna(c) and r and r > 0 and c > threshold else 0 for c, r in zip(current, rate)]
 
+        length_threshold = st.number_input("📏 ความยาวที่ต้องการให้แจ้งเตือน (mm)", min_value=30.0, max_value=50.0, value=length_threshold, step=0.5)
 
         hour_upper = calculate_hours_safe(upper_current, avg_rate_upper, length_threshold)
         hour_lower = calculate_hours_safe(lower_current, avg_rate_lower, length_threshold)
 
         #ให้กรอกค่า input ใน google sheet range brush to need notify
-        length_threshold = st.number_input("📏 ความยาวที่ต้องการให้แจ้งเตือน (mm)", min_value=30.0, max_value=50.0, value=length_threshold, step=0.5)
 
         st.subheader("📋 ตารางผลการคำนวณ")
         result_df = pd.DataFrame({
@@ -503,7 +503,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
         
         
-        st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
+        st.subheader(f"📊 กราฟ Remaining Hours ถึง {length_threshold:.1f} mm")
+
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
 
         color_upper = ['black' if h < 500 else 'red' for h in hour_upper]
