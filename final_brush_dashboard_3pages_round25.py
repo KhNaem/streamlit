@@ -901,6 +901,19 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     xls = pd.ExcelFile(sheet_url)
     
     
+    
+    service_account_info = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
+
+    # โหลดค่าความยาวจาก B45
+    try:
+        ws = sh.worksheet("Sheet1")
+        length_threshold = float(ws.acell("B45").value)
+    except:
+        length_threshold = 35.0  # fallback
+    
 
     sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
@@ -1002,8 +1015,16 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             y = [start - rate*t for t in time_hours]
             fig_upper.add_trace(go.Scatter(x=time_hours, y=y, name=f"Upper {i+1}", mode='lines'))
 
-    fig_upper.add_shape(type="line", x0=0, x1=200, y0=35, y1=35, line=dict(color="firebrick", width=2, dash="dash"))
-    fig_upper.add_annotation(x=5, y=35, text="⚠️ 35 mm", showarrow=False, font=dict(color="firebrick", size=12), bgcolor="white")
+# เส้นแจ้งเตือนตามค่าความยาวที่ต้องการ
+    fig_upper.add_shape(type="line", x0=0, x1=200, y0=length_threshold, y1=length_threshold,
+                        line=dict(color="firebrick", width=2, dash="dash"))
+
+    fig_upper.add_annotation(x=5, y=length_threshold,
+                            text=f"⚠️ {length_threshold:.1f} mm",
+                            showarrow=False,
+                            font=dict(color="firebrick", size=12),
+                            bgcolor="white")
+
 
     fig_upper.update_layout(title="🔺 ความยาว Upper ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
                             xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
