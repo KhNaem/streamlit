@@ -24,7 +24,7 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
-# https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing
+
 
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
@@ -34,7 +34,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing"
+    sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
 
     sheet_names = [ws.title for ws in sh.worksheets()]
@@ -50,7 +50,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 
     response = requests.get(sheet_url_export)
@@ -97,8 +97,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
+ 
     # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
-    # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
+ # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
     min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value="5")
     threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value="5.0")
 
@@ -114,6 +115,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         threshold_percent = 5.0
 
     threshold = threshold_percent / 100  # แปลงเป็นค่าเชิงทศนิยม
+
 
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
@@ -234,11 +236,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     round_show = min_required
     percent_show = threshold * 100
+
     
     
     #
     st.markdown(f"จำนวนรอบขั้นต่ำที่ทำให้อัตราการลดลงคงที่คงที่เท่ากับ {round_show} รอบ")
-    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {percent_show} %")
+    # แสดงค่าตามที่กรอกเป๊ะ ๆ
+    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {str(threshold_percent)} %")
+
 
 
 
@@ -277,6 +282,80 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
 
     hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
     hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+    
+    
+    
+    
+    
+    
+    
+    
+    #---------------------------------------- line chat bot --------------------------------
+    
+    
+        # ใส่ TOKEN และ userId ตรงนี้
+    LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
+    USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
+
+    def send_line_alert(user_id, access_token, message):
+        url = 'https://api.line.me/v2/bot/message/push'
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {access_token}'
+        }
+        body = {
+            "to": user_id,
+            "messages": [{"type": "text", "text": message}]
+        }
+        try:
+            r = requests.post(url, headers=headers, json=body)
+            if r.status_code != 200:
+                print("❌ LINE Error:", r.text)
+        except Exception as e:
+            print("❌ Exception while sending LINE:", e)
+
+    # 🔔 แจ้งเตือน hour ต่ำกว่า 100
+    for i, hour in enumerate(hour_upper):
+        if hour < 100 and hour > 0:
+            send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
+            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+    for i, hour in enumerate(hour_lower):
+        if hour < 100 and hour > 0:
+            send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
+            st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+    
+    
+    
+    
+    
+    
+    
+    #-------------------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
@@ -409,7 +488,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
     import requests
 
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(url)
 
@@ -420,7 +499,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
@@ -662,10 +741,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
-    
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
-    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url_export)
+    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
@@ -767,7 +843,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # เชื่อมต่อ Google Sheet
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
     
