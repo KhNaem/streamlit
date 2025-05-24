@@ -319,8 +319,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     
     
-    # บันทึกค่าลง Google Sheet
-    save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours)
+    
     
     
     
@@ -489,6 +488,12 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     #-------------------------------------------------------------------------------------
     
 
+    
+    
+    # บันทึกค่าลง Google Sheet
+        save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours)
+        
+        
         st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
 
