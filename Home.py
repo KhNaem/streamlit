@@ -531,6 +531,11 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         
     st.session_state.upper_avg = upper_avg
     st.session_state.lower_avg = lower_avg
+    
+    
+    
+    
+    
 
 # --------------------------------------------------- PAGE 2 -------------------------------------------------
 
@@ -922,7 +927,10 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     except:
         length_threshold = 35.0  # fallback
         
-        
+    # โหลด config จาก Sheet1
+    sheet_count_config, min_required, threshold_percent, alert_threshold_hours, length_threshold = load_config_from_sheet(sh, "Sheet1")
+    threshold = threshold_percent / 100
+
         
     sheet_names = [ws.title for ws in sh.worksheets()]
     if "Sheet1" in sheet_names:
@@ -997,13 +1005,13 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         final_avg = sum(combined) / len(combined) if combined else 0
         return round(final_avg, 6), False
 
-    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict):
+    def calc_avg_with_flag(rates_dict, rate_fixed_set, mark_dict,min_required, threshold):
         df = pd.DataFrame.from_dict(rates_dict, orient='index')
         df = df.reindex(range(1, 33)).fillna(0)
         avg_col = []
         for i, row in df.iterrows():
             values = row[row > 0].tolist()
-            if len(values) >= 6:
+            if len(values) >= min_required:
                 prev = values[:-1]
                 new = values[-1]
                 sheet_name = row[row > 0].index[-1] if len(row[row > 0].index) > 0 else ""
@@ -1022,8 +1030,9 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     yellow_mark_upper = {}
     yellow_mark_lower = {}
 
-    upper_df, avg_rate_upper = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
-    lower_df, avg_rate_lower = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
+    upper_df, avg_rate_upper = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper, min_required, threshold)
+    lower_df, avg_rate_lower = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower, min_required, threshold)
+
 
 
 
