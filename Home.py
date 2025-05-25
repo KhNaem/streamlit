@@ -933,17 +933,17 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         # ✅ 1. อ่านค่าจาก Google Sheet ก่อน
     try:
         ws = sh.worksheet("Sheet1")
-        sheet_count = int(ws.acell("F40").value)
+        sheet_save = int(ws.acell("F40").value)
     except:
-        sheet_count = 6
+        sheet_save = 6
 
     # ✅ 2. แล้วจึงใช้ค่าที่ได้ไปตัดชื่อชีต
-    selected_sheet_names = sheet_names[:sheet_count]
+    selected_sheet_names = sheet_names[:sheet_save]
 
 
     
 
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_count)
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_save)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
