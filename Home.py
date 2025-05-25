@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+
+
 permanent_fixed_upper = {}
 permanent_fixed_lower = {}
 permanent_yellow_upper = {}
@@ -25,10 +27,39 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
 
+def load_config_from_sheet(sh, sheet_name):
+    try:
+        ws = sh.worksheet(sheet_name)
+        sheet_count = int(ws.acell("B41").value)
+        min_required = int(ws.acell("B42").value)
+        threshold_percent = float(ws.acell("B43").value)
+        alert_threshold_hours = int(ws.acell("B44").value)
+        length_threshold = float(ws.acell("B45").value)
+        return sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold
+    except:
+        return 7, 5, 5.0, 50  # fallback default
+
+
+def save_config_to_sheet(sh, sheet_name, sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold):
+    try:
+        ws = sh.worksheet(sheet_name)
+        ws.update("B41", [[sheet_count]])
+        ws.update("B42", [[min_required]])
+        ws.update("B43", [[threshold_percent]])
+        ws.update("B44", [[alert_threshold_hours]])
+        ws.update("B45", [[length_threshold]])
+
+    except Exception as e:
+        st.error(f"❌ ไม่สามารถบันทึก config ลงชีตได้: {e}")
+
+
+
 
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
+    
+   
 
     # Setup credentials and spreadsheet access
     service_account_info = st.secrets["gcp_service_account"]
@@ -36,13 +67,17 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     gc = gspread.authorize(creds)
     sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
+    
+    # โหลดค่าจาก Google Sheet (B41-B44)
+    sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold = load_config_from_sheet(sh, "Sheet1")
 
     sheet_names = [ws.title for ws in sh.worksheets()]
     if "Sheet1" in sheet_names:
         sheet_names.remove("Sheet1")
         sheet_names = ["Sheet1"] + sheet_names
 
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=sheet_count)
+
     selected_sheets = sheet_names[:sheet_count]
     
 
@@ -97,9 +132,28 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
-    # 2. ฟังก์ชัน determine_final_rate คงเดิมได้เลย
+ 
+    # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
+ # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
+    min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value=str(min_required))
+    threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value=str(threshold_percent))
 
-    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required=5, threshold=0.1):
+    # แปลงค่าที่กรอก
+    try:
+        min_required = int(min_required_str)
+    except:
+        min_required = 5
+
+    try:
+        threshold_percent = float(threshold_percent_str)
+    except:
+        threshold_percent = 5.0
+
+    threshold = threshold_percent / 100
+
+
+
+    def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
         if len(previous_rates) >= min_required:
             avg_rate = sum(previous_rates) / len(previous_rates)
@@ -129,8 +183,6 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     # กำหนด จำนวนรอบที่ทำให้ rate คงที่ และ เปอร์เซ็นไม่เกินเท่าไร
 
-    min_required = 5
-    threshold = 0.1 # คูณด้วย 10 = ... %
 
     def calc_avg_with_flag(
         rates_dict, rate_fixed_set, mark_dict, permanent_fixed_rates,
@@ -219,12 +271,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         return styles
     
     round_show = min_required
-    percent_show = threshold * 10
+    percent_show = threshold * 100
+
     
     
     #
     st.markdown(f"จำนวนรอบขั้นต่ำที่ทำให้อัตราการลดลงคงที่คงที่เท่ากับ {round_show} รอบ")
-    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {percent_show} %")
+    # แสดงค่าตามที่กรอกเป๊ะ ๆ
+    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {str(threshold_percent)} %")
+
 
 
 
@@ -258,11 +313,40 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
             lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
 
-    def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+    def calculate_hours_safe(current, rate, threshold):
+        return [(c - threshold) / r if pd.notna(c) and r and r > 0 and c > threshold else 0 for c, r in zip(current, rate)]
 
-    hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
-    hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+    hour_upper = calculate_hours_safe(upper_current, avg_rate_upper, length_threshold)
+    hour_lower = calculate_hours_safe(lower_current, avg_rate_lower, length_threshold)
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 
@@ -340,11 +424,15 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').values
         lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').values
 
-        def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+        def calculate_hours_safe(current, rate, threshold):
+            return [(c - threshold) / r if pd.notna(c) and r and r > 0 and c > threshold else 0 for c, r in zip(current, rate)]
 
-        hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
-        hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
+        length_threshold = st.number_input("📏 ความยาวที่ต้องการให้แจ้งเตือน (mm)", min_value=30.0, max_value=50.0, value=length_threshold, step=0.5)
+
+        hour_upper = calculate_hours_safe(upper_current, avg_rate_upper, length_threshold)
+        hour_lower = calculate_hours_safe(lower_current, avg_rate_lower, length_threshold)
+
+        #ให้กรอกค่า input ใน google sheet range brush to need notify
 
         st.subheader("📋 ตารางผลการคำนวณ")
         result_df = pd.DataFrame({
@@ -357,8 +445,66 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             "Remaining Hours Lower": hour_lower,
         })
         st.dataframe(result_df, use_container_width=True)
+        
+        #---------------------------------------- line chat bot --------------------------------
+    
+    
+    
+        # 🔔 เกณฑ์ชั่วโมงที่ต้องการให้แจ้งเตือนผ่าน LINE (default = 50)
+        alert_threshold_hours = st.number_input("🔔 แจ้งเตือนเมื่อชั่วโมงเหลือน้อยกว่า", min_value=1, value=alert_threshold_hours)        
+            # ใส่ TOKEN และ userId ตรงนี้
+        LINE_TOKEN = "nX2Zf1yODXysP0Gwxtd5fyTIBp8sVCX+3mpLH6AGqAL8O0pTfuWKZtzzXokpsKGZ5sPpheYsV42kqHweOuQHB50Aei2qpd+5ZhuBYYzZxScp+TH1XLD0EDGZv+PV7N8PVV6vstQ4vyCRTmNQaNTT2AdB04t89/1O/w1cDnyilFU="
+        USER_ID = "U56383981a5881b1d444bf50bd9ee6833"
 
-        st.subheader("📊 กราฟ Remaining Hours ถึง 35mm")
+        def send_line_alert(user_id, access_token, message):
+            url = 'https://api.line.me/v2/bot/message/push'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {access_token}'
+            }
+            body = {
+                "to": user_id,
+                "messages": [{"type": "text", "text": message}]
+            }
+            try:
+                r = requests.post(url, headers=headers, json=body)
+                if r.status_code != 200:
+                    print("❌ LINE Error:", r.text)
+            except Exception as e:
+                print("❌ Exception while sending LINE:", e)
+
+        # 🔔 แจ้งเตือน hour ต่ำกว่า 100
+        for i, hour in enumerate(hour_upper):
+            if hour < alert_threshold_hours and hour > 0:
+                send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Upper) เหลือ {hour:.1f} ชั่วโมง")
+                st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+        for i, hour in enumerate(hour_lower):
+            if hour < alert_threshold_hours and hour > 0:
+                send_line_alert(USER_ID, LINE_TOKEN, f"⚠️ Brush #{i+1} (Lower) เหลือ {hour:.1f} ชั่วโมง")
+                st.write(f"📣 แจ้งเตือน Brush #{i+1} เพราะเหลือ {hour:.1f} ชั่วโมง")
+
+
+    
+    
+    
+    
+    
+    
+    
+    #-------------------------------------------------------------------------------------
+    
+
+    
+    
+    # บันทึกค่าลง Google Sheet
+        save_config_to_sheet(sh, "Sheet1", sheet_count, min_required, threshold_percent, alert_threshold_hours, length_threshold)
+
+        
+        
+        st.subheader(f"📊 กราฟ Remaining Hours ถึง {length_threshold:.1f} mm")
+
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
 
         color_upper = ['black' if h < 500 else 'red' for h in hour_upper]
@@ -387,8 +533,21 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.session_state.lower_avg = lower_avg
 
 # --------------------------------------------------- PAGE 2 -------------------------------------------------
+
+
 elif page == "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม":
     st.title("📝 กรอกข้อมูลแปรงถ่าน + ชั่วโมง")
+    
+    from io import BytesIO
+    import requests
+
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    response = requests.get(url)
+
+    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
+
 
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
@@ -396,51 +555,247 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
-    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names)
+    # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
 
+
+    sheet_names_all = [ws.title for ws in sh.worksheets()]
+
+    def extract_sheet_number(name):
+        try:
+            return int(name.lower().replace("sheet", ""))
+        except:
+            return float("inf")
+
+    sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet")]
+    sheet_names_sorted = sorted(sheet_names, key=extract_sheet_number)
+    if "Sheet1" in sheet_names_sorted:
+        sheet_names_sorted.remove("Sheet1")
+        sheet_names_sorted = ["Sheet1"] + sheet_names_sorted
+
+    sheet_names = sheet_names_sorted
+
+    filtered_sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+
+    # ✅ 2. ดึงตัวเลขของ SheetN
+    sheet_numbers = []
+    for name in filtered_sheet_names:
+        suffix = name.lower().replace("sheet", "")
+        if suffix.isdigit():
+            sheet_numbers.append(int(suffix))
+
+    sheet_numbers.sort()
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
+
+    # ทำให้ sheet มีการเรียงกัน
+    def extract_sheet_number(name):
+        try:
+            return int(name.lower().replace("sheet", ""))
+        except:
+            return float('inf')  # สำหรับกรณีชื่อไม่ใช่ตัวเลข
+
+    sheet_names = [s for s in sheet_names_all if s.lower().startswith("sheet")]
+    sheet_names_sorted = sorted(sheet_names, key=extract_sheet_number)
+
+    # ถ้าอยากให้ Sheet1 อยู่บนสุดเสมอ:
+    if "Sheet1" in sheet_names_sorted:
+        sheet_names_sorted.remove("Sheet1")
+        sheet_names_sorted = ["Sheet1"] + sheet_names_sorted
+
+    sheet_names = sheet_names_sorted
+    
+    
+    filtered_sheet_names = [s for s in sheet_names if s.lower() != "sheet1"]
+    sheet_numbers = [
+        int(s.lower().replace("sheet", "")) 
+        for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()
+    ]
+    sheet_numbers.sort()
+
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
+    
+    selected_sheet_auto = st.session_state.get("selected_sheet_auto", "Sheet1")
+    if selected_sheet_auto not in sheet_names:
+        selected_sheet_auto = sheet_names[0]  # fallback เผื่อ sheet ใหม่ยังไม่เจอทัน
+
+    selected_sheet = st.selectbox("📄 เลือก Sheet ที่ต้องการกรอกข้อมูล", sheet_names_sorted)
+
+    #st.write(f"🧪 Selected (auto): {selected_sheet_auto}")
+    #st.write(f"🧪 Dropdown Options: {sheet_names}")
+   
+
+        # ✅ เตรียมชื่อชีตถัดไป (เช่น Sheet13)
+    
+    
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
+
+    
+
+
+        # ดึงเลขชีตล่าสุดก่อนแสดงปุ่ม
+    filtered_sheet_names = [s for s in sheet_names if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    sheet_numbers = [int(s.lower().replace("sheet", "")) for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()]
+    sheet_numbers.sort()
+    next_sheet_name = f"Sheet{sheet_numbers[-1] + 1}" if sheet_numbers else "Sheet2"
+
+    # 📌 คำนวณชื่อชีตใหม่ (SheetN+1)
+    filtered_sheet_names = [s for s in sheet_names if s.lower() != "sheet1"]
+    sheet_numbers = [int(s.lower().replace("sheet", "")) for s in filtered_sheet_names if s.lower().replace("sheet", "").isdigit()]
+    sheet_numbers.sort()
+    next_sheet_number = sheet_numbers[-1] + 1 if sheet_numbers else 2
+    next_sheet_name = f"Sheet{next_sheet_number}"
+
+    # 📦 ปุ่มสร้างชีตใหม่
+    if st.button(f"➕ สร้างชีตที่ {next_sheet_name} "):
+        try:
+            # ใช้ sheet ล่าสุดเป็นต้นแบบ
+            last_sheet = f"Sheet{sheet_numbers[-1]}"
+            source_ws = sh.worksheet(last_sheet)
+            df_prev = source_ws.get_all_values()
+
+            # คัดลอกค่า current
+            lower_previous_formulas = [[f"={last_sheet}!C{i+3}"] for i in range(32)]
+            upper_previous_formulas = [[f"={last_sheet}!F{i+3}"] for i in range(32)]
+            
+
+            # ตรวจว่าชีตนี้มีอยู่แล้วหรือไม่
+            if next_sheet_name.lower() in [ws.title.lower() for ws in sh.worksheets()]:
+                st.warning(f"⚠️ Sheet '{next_sheet_name}' มีอยู่แล้ว")
+                st.stop()
+
+            # สร้างชีตใหม่
+            new_ws = sh.duplicate_sheet(source_sheet_id=source_ws.id, new_sheet_name=next_sheet_name)
+            
+            sheets = sh.worksheets()
+            new_ws = sh.worksheet(next_sheet_name)
+            # ย้าย sheet ไปท้ายสุด
+            sheets = [ws for ws in sheets if ws.title != next_sheet_name]
+            sheets.append(new_ws)
+            sh.reorder_worksheets(sheets)
+
+            
+                       
+                        
+            # วางสูตร (ระบุ USER_ENTERED เพื่อให้เป็นสูตร)
+            new_ws.update("B3:B34", lower_previous_formulas, value_input_option="USER_ENTERED")
+            new_ws.update("E3:E34", upper_previous_formulas, value_input_option="USER_ENTERED")
+            
+            
+            try:
+                new_ws.update("B3:B34", lower_previous_formulas, value_input_option="USER_ENTERED")
+                new_ws.update("E3:E34", upper_previous_formulas, value_input_option="USER_ENTERED")
+            except Exception as e:
+                st.error(f"❌ เกิดข้อผิดพลาดขณะใส่สูตร: {e}")
+
+
+            from gspread.utils import rowcol_to_a1
+            
+            import time
+
+            for i in range(32):
+
+                if i % 10 == 0:
+                    time.sleep(2)
+
+
+
+            st.session_state["selected_sheet_auto"] = next_sheet_name  # ✅ เพิ่มบรรทัดนี้
+            st.success(f"✅ สร้างชีต '{next_sheet_name}' สำเร็จแล้ว 🎉")
+            st.rerun()
+        except Exception as e:
+            st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+
+
+
+
+
+
+    # โหลดค่าทันทีจาก selected_sheet
     ws = sh.worksheet(selected_sheet)
+    df_prev = ws.get_all_values()
 
-    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1)
+    lower_current = [row[2] if len(row) > 2 else "" for row in df_prev[2:34]]
+    upper_current = [row[5] if len(row) > 5 else "" for row in df_prev[2:34]]
+
+    # โหลดชั่วโมง/วัน
+    try:
+        default_hours = float(ws.acell("H1").value or 0)
+    except:
+        default_hours = 0.0
+    default_prev_date = ws.acell("A2").value or ""
+    default_curr_date = ws.acell("B2").value or ""
+
+
+    hours = st.number_input("⏱️ ชั่วโมง", min_value=0.0, step=0.1, value=float(default_hours))
     
-    
-    prev_date = st.text_input("📅 วันที่ Previous (A2)", placeholder="DD/MM/YYYY")
-    curr_date = st.text_input("📅 วันที่ Current (B2)", placeholder="DD/MM/YYYY")
+    prev_date = st.text_input("📅 วันที่ตรวจก่อนหน้า", placeholder="DD/MM/YYYY", value=default_prev_date)
+    curr_date = st.text_input("📅 วันที่ตรวจล่าสุด", placeholder="DD/MM/YYYY", value=default_curr_date)
+
  
+    
+    
+
+    
 
     st.markdown("### 🔧 แปลงถ่านส่วน LOWER")
-    upper = []
-    cols = st.columns(8)
-    for i in range(32):
-        col = cols[i % 8]
-        with col:
-            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"u{i}", label_visibility="collapsed", placeholder="0.00")
-            try:
-                upper.append(float(value))
-            except:
-                upper.append(0.0)
-
-    st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
     lower = []
     cols = st.columns(8)
     for i in range(32):
         col = cols[i % 8]
         with col:
             st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
-            value = st.text_input(f"{i+1}", key=f"l{i}", label_visibility="collapsed", placeholder="0.00")
+            value = st.text_input(
+                label="",  # 👈 ใส่ label เป็นค่าว่าง
+                key=f"lower_input_{i}",
+                value=str(lower_current[i]),
+                label_visibility="collapsed",  # 👈 ซ่อน label แบบสมบูรณ์
+                )
+
+            #value = st.text_input(
+            #f"lower_{i+1}",                     # ชื่อ label
+            #key=f"lower_input_{i}",             # key ไม่ซ้ำ
+            #value=str(lower_current[i]),       # ดึงค่าปัจจุบันมาแสดง
+        #)
             try:
                 lower.append(float(value))
             except:
                 lower.append(0.0)
+                
+    st.markdown("### 🔧 แปลงถ่านส่วน UPPER")
+    upper = []
+    cols = st.columns(8)
+    for i in range(32):
+        col = cols[i % 8]
+        with col:
+            st.markdown(f"<div style='text-align: center;'>แปลงถ่านที่ {i+1}</div>", unsafe_allow_html=True)
+            value = st.text_input(
+                label="",  # 👈 ใส่ label เป็นค่าว่าง
+                key=f"upper_input_{i}",
+                value=str(upper_current[i]),
+                label_visibility="collapsed",  # 👈 ซ่อน label แบบสมบูรณ์
+                )
+
+            try:
+                upper.append(float(value))
+            except:
+                upper.append(0.0)
 
     if st.button("📤 บันทึก"):
         try:
             ws.update("A2", [[prev_date]])
             ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
-            ws.update("C3:C34", [[v] for v in upper])
-            ws.update("F3:F34", [[v] for v in lower])
+            
+            # 🟦 อัปเดตค่าของแปรง LOWER ลงคอลัมน์ C (C3:C34)
+            lower_values = [[v] for v in lower]
+            ws.update("C3:C34", lower_values)
+
+            # 🟥 อัปเดตค่าของแปรง UPPER ลงคอลัมน์ F (F3:F34)
+            upper_values = [[v] for v in upper]
+            ws.update("F3:F34", upper_values)
+
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
             st.error(f"❌ {e}")
@@ -554,8 +909,41 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     xls = pd.ExcelFile(sheet_url)
     
     
+    
+    service_account_info = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
-    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
+    # โหลดค่าความยาวจาก B45
+    try:
+        ws = sh.worksheet("Sheet1")
+        length_threshold = float(ws.acell("B45").value)
+    except:
+        length_threshold = 35.0  # fallback
+        
+        
+        
+    sheet_names = [ws.title for ws in sh.worksheets()]
+    if "Sheet1" in sheet_names:
+        sheet_names.remove("Sheet1")
+        sheet_names = ["Sheet1"] + sheet_names
+        
+        
+        # ✅ 1. อ่านค่าจาก Google Sheet ก่อน
+    try:
+        ws = sh.worksheet("Sheet1")
+        sheet_count = int(ws.acell("F40").value)
+    except:
+        sheet_count = 6
+
+    # ✅ 2. แล้วจึงใช้ค่าที่ได้ไปตัดชื่อชีต
+    selected_sheet_names = sheet_names[:sheet_count]
+
+
+    
+
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_count)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
@@ -628,8 +1016,14 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         return df, avg_col
     
 
-    avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
-    avg_rate_lower = st.session_state.get("lower_avg", [0]*32)
+    # ใช้ calc_avg_with_flag ที่คุณมีอยู่แล้ว
+    rate_fixed_upper = set()
+    rate_fixed_lower = set()
+    yellow_mark_upper = {}
+    yellow_mark_lower = {}
+
+    upper_df, avg_rate_upper = calc_avg_with_flag(upper_rates, rate_fixed_upper, yellow_mark_upper)
+    lower_df, avg_rate_lower = calc_avg_with_flag(lower_rates, rate_fixed_lower, yellow_mark_lower)
 
 
 
@@ -649,8 +1043,16 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             y = [start - rate*t for t in time_hours]
             fig_upper.add_trace(go.Scatter(x=time_hours, y=y, name=f"Upper {i+1}", mode='lines'))
 
-    fig_upper.add_shape(type="line", x0=0, x1=200, y0=35, y1=35, line=dict(color="firebrick", width=2, dash="dash"))
-    fig_upper.add_annotation(x=5, y=35, text="⚠️ 35 mm", showarrow=False, font=dict(color="firebrick", size=12), bgcolor="white")
+# เส้นแจ้งเตือนตามค่าความยาวที่ต้องการ
+    fig_upper.add_shape(type="line", x0=0, x1=200, y0=length_threshold, y1=length_threshold,
+                        line=dict(color="firebrick", width=2, dash="dash"))
+
+    fig_upper.add_annotation(x=5, y=length_threshold,
+                            text=f"⚠️ {length_threshold:.1f} mm",
+                            showarrow=False,
+                            font=dict(color="firebrick", size=12),
+                            bgcolor="white")
+
 
     fig_upper.update_layout(title="🔺 ความยาว Upper ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
                             xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
@@ -663,9 +1065,10 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             y = [start - rate*t for t in time_hours]
             fig_lower.add_trace(go.Scatter(x=time_hours, y=y, name=f"Lower {i+1}", mode='lines', line=dict(dash='dot')))
 
-    fig_lower.add_shape(type="line", x0=0, x1=200, y0=35, y1=35, line=dict(color="firebrick", width=2, dash="dash"))
-    fig_lower.add_annotation(x=5, y=35, text="⚠️  35 mm", showarrow=False, font=dict(color="firebrick", size=12), bgcolor="white")
-
-    fig_lower.update_layout(title="🔻 ความยาว Lower ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
-                            xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
-    st.plotly_chart(fig_lower, use_container_width=True)
+    fig_lower.add_shape(type="line", x0=0, x1=200, y0=length_threshold, y1=length_threshold,
+                        line=dict(color="firebrick", width=2, dash="dash"))
+    fig_lower.add_annotation(x=5, y=length_threshold,
+                            text=f"⚠️  {length_threshold:.1f} mm",
+                            showarrow=False,
+                            font=dict(color="firebrick", size=12),
+                            bgcolor="white")
