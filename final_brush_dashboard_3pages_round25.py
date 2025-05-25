@@ -71,23 +71,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     # โหลดค่าจาก Google Sheet (B41-B44)
     sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold = load_config_from_sheet(sh, "Sheet1")
 
-    # ดึงชื่อชีตทั้งหมด
-    sheet_names_all = [ws.title for ws in sh.worksheets()]
+    sheet_names = [ws.title for ws in sh.worksheets()]
+    if "Sheet1" in sheet_names:
+        sheet_names.remove("Sheet1")
+        sheet_names = ["Sheet1"] + sheet_names
 
-    # กรองเอาเฉพาะชีตที่ขึ้นต้นด้วย Sheet (ไม่เอา Sheet1 ถ้าเก็บ config)
-    sheet_names_filtered = [s for s in sheet_names_all if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=sheet_count)
 
-    # จำนวนชีตที่ใช้จริง
-    sheet_count = len(sheet_names_filtered)
-
-    # รวมชื่อชีตไว้ใช้
-    selected_sheets = sheet_names_filtered[:sheet_count]
-
-    # แสดงจำนวนชีตให้ผู้ใช้ทราบ
-    st.markdown(f"📌 จำนวนชีตที่ใช้ในการวิเคราะห์: **{sheet_count} ชีต**")
-
-
-    selected_sheets = sheet_names_filtered[:sheet_count]
+    selected_sheets = sheet_names[:sheet_count]
     
 
 
@@ -381,21 +372,13 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     st.plotly_chart(fig_lower, use_container_width=True)
 
 
-    sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
+    #sheet_names = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
     #sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=6)
-        
     try:
         
         xls = pd.ExcelFile(sheet_url_export, engine='openpyxl')
         
-        try:
-            ws = sh.worksheet("Sheet1")
-            sheet_count = int(ws.acell("F40").value)
-        except:
-            sheet_count = 6  # fallback default
-            
         selected_sheet_names = sheet_names[:sheet_count]
-        
         brush_numbers = list(range(1, 33))
         upper_rates, lower_rates = {n: {} for n in brush_numbers}, {n: {} for n in brush_numbers}
 
@@ -938,18 +921,9 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
         length_threshold = float(ws.acell("B45").value)
     except:
         length_threshold = 35.0  # fallback
-        
-        
-    try:
-        ws = sh.worksheet("Sheet1")
-        sheet_count_default = int(ws.acell("B51").value)
-    except:
-        sheet_count_default = 6  # fallback default
-
     
 
-    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-30)", min_value=1, max_value=30, value=sheet_count_default)
-
+    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้ (1-7)", min_value=1, max_value=7, value=6)
     # ดึงชื่อชีตจริงจากไฟล์
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
@@ -1062,19 +1036,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
 
     fig_upper.update_layout(title="🔺 ความยาว Upper ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
                             xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
-    
-    
-    try:
-        ws.update("B51", str(sheet_count))
-    except Exception as e:
-        st.warning(f"❌ บันทึกจำนวนชีตไปยัง B51 ไม่สำเร็จ: {e}")
-
-    
-    
     st.plotly_chart(fig_upper, use_container_width=True)
-    
-    
-    
 
     # LOWER
     fig_lower = go.Figure()
@@ -1090,4 +1052,3 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
                             showarrow=False,
                             font=dict(color="firebrick", size=12),
                             bgcolor="white")
-
