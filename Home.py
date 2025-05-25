@@ -1072,3 +1072,6 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
                             showarrow=False,
                             font=dict(color="firebrick", size=12),
                             bgcolor="white")
+    fig_lower.update_layout(title="🔺 ความยาว Lower ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
+                        xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
+    st.plotly_chart(fig_lower, use_container_width=True)
