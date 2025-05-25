@@ -787,6 +787,14 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             ws.update("A2", [[prev_date]])
             ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
+            
+            # 🟦 อัปเดตค่าของแปรง LOWER ลงคอลัมน์ C (C3:C34)
+            lower_values = [[v] for v in lower]
+            ws.update("C3:C34", lower_values)
+
+            # 🟥 อัปเดตค่าของแปรง UPPER ลงคอลัมน์ F (F3:F34)
+            upper_values = [[v] for v in upper]
+            ws.update("F3:F34", upper_values)
 
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
