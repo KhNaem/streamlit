@@ -977,6 +977,25 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
 
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_save)
     # ดึงชื่อชีตจริงจากไฟล์
+    
+    
+    # 📥 โหลดค่าจำนวนชีตย้อนหลังเริ่มต้นจาก Sheet1!F40
+    try:
+        ws = sh.worksheet("Sheet1")
+        sheet_count_default = int(ws.acell("F40").value)
+    except:
+        sheet_count_default = 6  # fallback
+
+    # 📌 ให้ผู้ใช้กรอกจำนวนชีต (ใช้แบบ number_input)
+    sheet_count = st.number_input("📌 กรอกจำนวนชีตย้อนหลังที่ต้องใช้", min_value=1, max_value=30, value=sheet_count_default)
+
+    # ✅ อัปเดตกลับไปยัง Sheet1!F40 ทันที
+    try:
+        ws.update("F40", str(sheet_count))
+    except Exception as e:
+        st.warning(f"⚠️ ไม่สามารถอัปเดต Sheet1!F40 ได้: {e}")
+
+    
     all_sheet_names = xls.sheet_names
     sheet_names = [s for s in all_sheet_names if s.lower().startswith("sheet")][:sheet_count]
 
