@@ -1037,9 +1037,11 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
             y = [start - rate*t for t in time_hours]
             fig_lower.add_trace(go.Scatter(x=time_hours, y=y, name=f"Lower {i+1}", mode='lines', line=dict(dash='dot')))
 
-    fig_lower.add_shape(type="line", x0=0, x1=200, y0=35, y1=35, line=dict(color="firebrick", width=2, dash="dash"))
-    fig_lower.add_annotation(x=5, y=35, text="⚠️  35 mm", showarrow=False, font=dict(color="firebrick", size=12), bgcolor="white")
+    fig_lower.add_shape(type="line", x0=0, x1=200, y0=length_threshold, y1=length_threshold,
+                        line=dict(color="firebrick", width=2, dash="dash"))
+    fig_lower.add_annotation(x=5, y=length_threshold,
+                            text=f"⚠️  {length_threshold:.1f} mm",
+                            showarrow=False,
+                            font=dict(color="firebrick", size=12),
+                            bgcolor="white")
 
-    fig_lower.update_layout(title="🔻 ความยาว Lower ตามเวลา", xaxis_title="ชั่วโมง", yaxis_title="mm",
-                            xaxis=dict(dtick=10, range=[0, 200]), yaxis=dict(range=[30, 65]))
-    st.plotly_chart(fig_lower, use_container_width=True)
