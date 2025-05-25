@@ -66,7 +66,12 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
     sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
-    sh = gc.open_by_url(sheet_url)
+    try:
+        sh = gc.open_by_url(sheet_url)
+    except Exception as e:
+        st.error(f"❌ ไม่สามารถเปิด Google Sheet ได้: {e}")
+        st.stop()  # หยุดการทำงานหน้าเว็บเพื่อไม่ให้พังต่อ
+
     
     # โหลดค่าจาก Google Sheet (B41-B44)
     sheet_count, min_required, threshold_percent, alert_threshold_hours,length_threshold = load_config_from_sheet(sh, "Sheet1")
