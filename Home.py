@@ -908,17 +908,16 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 elif page == "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)":
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
-    # เชื่อมต่อ Google Sheet
-    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url)
-    
-    
-    
+    # ✅ ใช้ Google Sheet เดียวทุกจุด
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
+    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    xls = pd.ExcelFile(sheet_url_export)
+
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
+    sh = gc.open_by_url(f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit")
+
 
     # โหลดค่าความยาวจาก B45
     try:
@@ -933,6 +932,14 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
 
         
     sheet_names = [ws.title for ws in sh.worksheets()]
+    filtered_sheet_names = [s for s in sheet_names if s.lower().startswith("sheet") and s.lower() != "sheet1"]
+    
+    avg_rate_upper = st.session_state.get("upper_avg", [0]*32)
+    avg_rate_lower = st.session_state.get("lower_avg", [0]*32)
+
+    
+    
+    
     if "Sheet1" in sheet_names:
         sheet_names.remove("Sheet1")
         sheet_names = ["Sheet1"] + sheet_names
@@ -947,6 +954,23 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
 
     # ✅ 2. แล้วจึงใช้ค่าที่ได้ไปตัดชื่อชีต
     selected_sheet_names = sheet_names[:sheet_save]
+    
+    
+        # 📥 โหลดค่าคงที่จาก Sheet1
+    try:
+        ws = sh.worksheet("Sheet1")
+        min_required = int(ws.acell("B42").value)
+        threshold_percent = float(ws.acell("B43").value)
+        alert_threshold_hours = int(ws.acell("B44").value)
+        length_threshold = float(ws.acell("B45").value)
+    except:
+        min_required = 5
+        threshold_percent = 5.0
+        alert_threshold_hours = 100
+        length_threshold = 35.0
+
+    threshold = threshold_percent / 100
+
 
 
     
