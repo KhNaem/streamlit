@@ -6,15 +6,6 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
-@st.cache_data(ttl=120)
-def get_xls_bytes(sheet_url_export):
-    import requests
-    response = requests.get(sheet_url_export)
-    if response.status_code != 200 or b'html' in response.content[:200].lower():
-        st.error("❌ โหลดไฟล์ Excel ไม่สำเร็จ อาจเกิดจาก quota เต็มหรือ sheet ปิดสิทธิ์")
-        st.stop()
-    return response.content
-
 
 
 permanent_fixed_upper = {}
@@ -74,7 +65,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU/edit?usp=sharing"
+    sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
     try:
         sh = gc.open_by_url(sheet_url)
     except Exception as e:
@@ -99,7 +90,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_id = "17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 
     response = requests.get(sheet_url_export)
@@ -560,7 +551,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
     import requests
 
-    sheet_id = "17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(url)
 
@@ -571,7 +562,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU/edit?usp=sharing")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
@@ -821,14 +812,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
-    import requests
-    from io import BytesIO
-
-    sheet_url_export = "https://docs.google.com/spreadsheets/d/17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU/edit?usp=sharing"
-    response = requests.get(sheet_url_export)
-    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
-    #https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing
-    
+    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
@@ -930,7 +914,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # ✅ ใช้ Google Sheet เดียวทุกจุด
-    sheet_id = "17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url_export)
 
@@ -1001,24 +985,11 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     
     
     # 📥 โหลดค่าจำนวนชีตย้อนหลังเริ่มต้นจาก Sheet1!F40
-    def safe_int(val, default=6):
-        try:
-            val_str = str(val).strip()
-            if val_str.isdigit():
-                return int(val_str)
-            elif val_str.replace('.', '', 1).isdigit():
-                return int(float(val_str))
-            else:
-                return default
-        except:
-            return default
-
     try:
         ws = sh.worksheet("Sheet1")
-        sheet_count_default = safe_int(ws.acell("F40").value)
+        sheet_count_default = int(ws.acell("F40").value)
     except:
-        sheet_count_default = 6
-
+        sheet_count_default = 6  # fallback
 
     # 📌 ให้ผู้ใช้กรอกจำนวนชีต (ใช้แบบ number_input)
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_save)
