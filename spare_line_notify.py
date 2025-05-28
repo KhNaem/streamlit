@@ -6,6 +6,17 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+@st.cache_data(ttl=120)  # cache 2 นาที (ลด quota)
+def get_xls(sheet_url_export):
+    import requests
+    from io import BytesIO
+    response = requests.get(sheet_url_export)
+    # เช็คว่าต้องเป็นไฟล์ excel จริง
+    if response.status_code != 200 or b'html' in response.content[:200].lower():
+        st.error("❌ โหลดไฟล์ Excel ไม่สำเร็จ อาจเกิดจาก quota เต็มหรือ sheet ปิดสิทธิ์")
+        st.stop()
+    return pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
 
 
 permanent_fixed_upper = {}
@@ -93,8 +104,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     sheet_id = "17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 
-    response = requests.get(sheet_url_export)
-    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+    xls = get_xls(sheet_url_export)
+
+
 
 
 
@@ -552,10 +564,12 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     import requests
 
     sheet_id = "17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    response = requests.get(url)
+    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    
+    xls = get_xls(sheet_url_export)
 
-    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+
+
 
 
 
@@ -816,8 +830,10 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
 
     sheet_url_export = "https://docs.google.com/spreadsheets/d/17NoOHN1YTPYftytZs55zAVKz31-z4t46Cu1DdRtc2LU/edit?usp=sharing"
-    response = requests.get(sheet_url_export)
-    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+    
+    xls = get_xls(sheet_url_export)
+
+
     #https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing
     
    
