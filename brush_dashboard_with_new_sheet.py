@@ -421,6 +421,16 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
     sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing")
+    
+        # --- ใส่ block นี้ต่อจากการเชื่อมต่อชีต ---
+    if st.button("สร้าง Sheet2 ใหม่"):
+        all_sheet_names = [ws.title for ws in sh.worksheets()]
+        if "Sheet2" not in all_sheet_names:
+            ws1 = sh.worksheet("Sheet1")
+            sh.duplicate_sheet(ws1.id, new_sheet_name="Sheet2")
+            st.success("✅ สร้าง Sheet2 สำเร็จแล้ว")
+        else:
+            st.info("Sheet2 มีอยู่แล้ว")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
