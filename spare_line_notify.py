@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 import gspread
 from google.oauth2.service_account import Credentials
 
+@st.cache_data(ttl=120)
+def get_xls_bytes(sheet_url_export):
+    import requests
+    response = requests.get(sheet_url_export)
+    if response.status_code != 200 or b'html' in response.content[:200].lower():
+        st.error("❌ โหลดไฟล์ Excel ไม่สำเร็จ อาจเกิดจาก quota เต็มหรือ sheet ปิดสิทธิ์")
+        st.stop()
+    return response.content
+
 
 
 permanent_fixed_upper = {}
