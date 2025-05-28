@@ -812,7 +812,14 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
-    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
+    import requests
+    from io import BytesIO
+
+    sheet_url_export = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx"
+    response = requests.get(sheet_url_export)
+    xls = pd.ExcelFile(BytesIO(response.content), engine="openpyxl")
+    #https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing
+    
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
@@ -985,11 +992,24 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     
     
     # 📥 โหลดค่าจำนวนชีตย้อนหลังเริ่มต้นจาก Sheet1!F40
+    def safe_int(val, default=6):
+        try:
+            val_str = str(val).strip()
+            if val_str.isdigit():
+                return int(val_str)
+            elif val_str.replace('.', '', 1).isdigit():
+                return int(float(val_str))
+            else:
+                return default
+        except:
+            return default
+
     try:
         ws = sh.worksheet("Sheet1")
-        sheet_count_default = int(ws.acell("F40").value)
+        sheet_count_default = safe_int(ws.acell("F40").value)
     except:
-        sheet_count_default = 6  # fallback
+        sheet_count_default = 6
+
 
     # 📌 ให้ผู้ใช้กรอกจำนวนชีต (ใช้แบบ number_input)
     sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้ ", min_value=1, max_value=len(sheet_names), value=sheet_save)
