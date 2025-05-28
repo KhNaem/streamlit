@@ -25,6 +25,7 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
 
+
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
     st.title("🛠️ วิเคราะห์อัตราสึกหรอและชั่วโมงที่เหลือของ Brush")
@@ -33,7 +34,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1ec1BJmRSDuDkFz61dCBB9Dd-8c1DxtTVMcffXOw5yXE/edit?usp=sharing"
+    sheet_url = "https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing"
     sh = gc.open_by_url(sheet_url)
 
     sheet_names = [ws.title for ws in sh.worksheets()]
@@ -49,7 +50,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     import requests
     from io import BytesIO
 
-    sheet_id = "1ec1BJmRSDuDkFz61dCBB9Dd-8c1DxtTVMcffXOw5yXE"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
 
     response = requests.get(sheet_url_export)
@@ -96,8 +97,9 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
+ 
     # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
-    # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
+ # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
     min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value="5")
     threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value="5.0")
 
@@ -113,6 +115,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         threshold_percent = 5.0
 
     threshold = threshold_percent / 100  # แปลงเป็นค่าเชิงทศนิยม
+
 
     def determine_final_rate(previous_rates, new_rate, row_index, sheet_name, mark_dict, min_required, threshold):
         previous_rates = [r for r in previous_rates if pd.notna(r) and r > 0]
@@ -233,11 +236,14 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
     
     round_show = min_required
     percent_show = threshold * 100
+
     
     
     #
     st.markdown(f"จำนวนรอบขั้นต่ำที่ทำให้อัตราการลดลงคงที่คงที่เท่ากับ {round_show} รอบ")
-    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {percent_show} %")
+    # แสดงค่าตามที่กรอกเป๊ะ ๆ
+    st.markdown(f"จำนวนเปอร์เซ็นสูงที่สุดที่ทำให้คิดเป็นอัตราการลดลงคงที่ ไม่เกิน {str(threshold_percent)} %")
+
 
 
 
@@ -408,7 +414,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
     import requests
 
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_id = "1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(url)
 
@@ -419,17 +425,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing")
-    
-        # --- ใส่ block นี้ต่อจากการเชื่อมต่อชีต ---
-    if st.button("สร้าง Sheet2 ใหม่"):
-        all_sheet_names = [ws.title for ws in sh.worksheets()]
-        if "Sheet2" not in all_sheet_names:
-            ws1 = sh.worksheet("Sheet1")
-            sh.duplicate_sheet(ws1.id, new_sheet_name="Sheet2")
-            st.success("✅ สร้าง Sheet2 สำเร็จแล้ว")
-        else:
-            st.info("Sheet2 มีอยู่แล้ว")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/edit?usp=sharing")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
@@ -661,18 +657,9 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     if st.button("📤 บันทึก"):
         try:
-            # 🟢 อัปเดตวันที่และชั่วโมง
             ws.update("A2", [[prev_date]])
             ws.update("B2", [[curr_date]])
             ws.update("H1", [[hours]])
-
-            # 🟦 อัปเดตค่าของแปรง LOWER ลงคอลัมน์ C (C3:C34)
-            lower_values = [[v] for v in lower]
-            ws.update("C3:C34", lower_values)
-
-            # 🟥 อัปเดตค่าของแปรง UPPER ลงคอลัมน์ F (F3:F34)
-            upper_values = [[v] for v in upper]
-            ws.update("F3:F34", upper_values)
 
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
@@ -680,10 +667,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
 
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
-    
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
-    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url_export)
+    xls = pd.ExcelFile("https://docs.google.com/spreadsheets/d/1Pd6ISon7-7n7w22gPs4S3I9N7k-6uODdyiTvsfXaSqY/export?format=xlsx")
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
@@ -785,7 +769,7 @@ elif page == "📈 พล็อตกราฟตามเวลา (แยก U
     st.title("📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)")
 
     # เชื่อมต่อ Google Sheet
-    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
+    sheet_id = "1SOkIH9jchaJi_0eck5UeyUR8sTn2arndQofmXv5pTdQ"
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     xls = pd.ExcelFile(sheet_url)
     
