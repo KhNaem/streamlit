@@ -24,7 +24,6 @@ page = st.sidebar.radio("📂 เลือกหน้า", [
     "📝 กรอกข้อมูลแปลงถ่านเพิ่มเติม",
     "📈 พล็อตกราฟตามเวลา (แยก Upper และ Lower)"])
 
-# https://docs.google.com/spreadsheets/d/1PUi4SXo4b_Zu7LO9mm4-EaYpPBnILSG41Jxr7a0Yaaw/edit?usp=sharing
 
 # ------------------ PAGE 1 ------------------
 if page == "📊 หน้าแสดงผล rate และ ชั่วโมงที่เหลือ":
@@ -42,7 +41,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         sheet_names.remove("Sheet1")
         sheet_names = ["Sheet1"] + sheet_names
 
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้",min_value=1,max_value=len(sheet_names),value=1)
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
     selected_sheets = sheet_names[:sheet_count]
     
 
@@ -97,8 +96,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
                 lower_rates[n][f"Lower_{sheet}"] = rate if rate > 0 else 0
 
 
-   # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
- # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
+    # 🔧 ให้ผู้ใช้กรอกจำนวนรอบขั้นต่ำ และเปอร์เซ็นต์ threshold
+    # ใช้ text_input แทน number_input เพื่อไม่ให้มี +/-
     min_required_str = st.text_input("🔢 จำนวนรอบขั้นต่ำที่ทำให้อัตราคงที่", value="5")
     threshold_percent_str = st.text_input("📉 เปอร์เซ็นต์ที่ยอมให้ (%)", value="5.0")
 
@@ -272,19 +271,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
             lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
 
-    def calculate_hours_safe(currents, rates):
-        hours = []
-        for cur, rate in zip(currents, rates):
-            try:
-                cur_val = float(cur)
-                rate_val = float(rate)
-                if rate_val > 0:
-                    hours.append(cur_val / rate_val)
-                else:
-                    hours.append(0)
-            except:
-                hours.append(0)
-        return hours
+    def calculate_hours_safe(current, rate):
+            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
 
     hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
     hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
@@ -365,19 +353,8 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').values
         lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').values
 
-        def calculate_hours_safe(currents, rates):
-            hours = []
-            for cur, rate in zip(currents, rates):
-                try:
-                    cur_val = float(cur)
-                    rate_val = float(rate)
-                    if rate_val > 0:
-                        hours.append(cur_val / rate_val)
-                    else:
-                        hours.append(0)
-                except:
-                    hours.append(0)
-            return hours
+        def calculate_hours_safe(current, rate):
+            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
 
         hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
         hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
@@ -431,7 +408,7 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     from io import BytesIO
     import requests
 
-    sheet_id = "1ec1BJmRSDuDkFz61dCBB9Dd-8c1DxtTVMcffXOw5yXE"
+    sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = requests.get(url)
 
@@ -442,7 +419,17 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
     service_account_info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
     gc = gspread.authorize(creds)
-    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1ec1BJmRSDuDkFz61dCBB9Dd-8c1DxtTVMcffXOw5yXE/edit?usp=sharing")
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E/edit?usp=sharing")
+    
+        # --- ใส่ block นี้ต่อจากการเชื่อมต่อชีต ---
+    if st.button("สร้าง Sheet2 ใหม่"):
+        all_sheet_names = [ws.title for ws in sh.worksheets()]
+        if "Sheet2" not in all_sheet_names:
+            ws1 = sh.worksheet("Sheet1")
+            sh.duplicate_sheet(ws1.id, new_sheet_name="Sheet2")
+            st.success("✅ สร้าง Sheet2 สำเร็จแล้ว")
+        else:
+            st.info("Sheet2 มีอยู่แล้ว")
 
 # ✅ ดึงเฉพาะชีตที่ชื่อขึ้นต้นด้วย Sheet (หรือเปลี่ยนเป็นตาม pattern ของคุณ เช่น "Sheet1", "Sheet2", ...)
     # ✅ 1. เตรียมรายชื่อชีตทั้งหมดแบบ normalize (รองรับ sheet ชื่อเล็ก/ใหญ่)
@@ -690,13 +677,13 @@ elif page == "📝 กรอกข้อมูลแปลงถ่านเพ�
             st.success(f"✅ บันทึกลง {selected_sheet} แล้วเรียบร้อย")
         except Exception as e:
             st.error(f"❌ {e}")
+
     # ------------------ แสดงตารางรวม ------------------
     st.subheader("📄 ตารางรวม Upper + Lower (Current / Previous)")
     
-    # เชื่อมต่อ Google Sheet
     sheet_id = "1cZ93K_ndX-8V4xX5lD7crCIZFaiAO5UuMsBMfTVbg-E"
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    xls = pd.ExcelFile(sheet_url)
+    sheet_url_export = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    xls = pd.ExcelFile(sheet_url_export)
    
     # 📌 เลือกชีตที่ต้องการดู
     sheet_options = [ws.title for ws in sh.worksheets() if ws.title.lower().startswith("sheet")]
