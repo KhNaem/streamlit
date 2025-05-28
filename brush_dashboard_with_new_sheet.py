@@ -272,8 +272,19 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
             upper_current = pd.to_numeric(df_sheet7.iloc[2:34, 5], errors='coerce').values
             lower_current = pd.to_numeric(df_sheet7.iloc[2:34, 2], errors='coerce').values
 
-    def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+    def calculate_hours_safe(currents, rates):
+        hours = []
+        for cur, rate in zip(currents, rates):
+            try:
+                cur_val = float(cur)
+                rate_val = float(rate)
+                if rate_val > 0:
+                    hours.append(cur_val / rate_val)
+                else:
+                    hours.append(0)
+            except:
+                hours.append(0)
+        return hours
 
     hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
     hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
@@ -354,8 +365,19 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         upper_current = pd.to_numeric(df_current.iloc[0:32, 5], errors='coerce').values
         lower_current = pd.to_numeric(df_current.iloc[0:32, 2], errors='coerce').values
 
-        def calculate_hours_safe(current, rate):
-            return [(c - 35) / r if pd.notna(c) and r and r > 0 and c > 35 else 0 for c, r in zip(current, rate)]
+        def calculate_hours_safe(currents, rates):
+            hours = []
+            for cur, rate in zip(currents, rates):
+                try:
+                    cur_val = float(cur)
+                    rate_val = float(rate)
+                    if rate_val > 0:
+                        hours.append(cur_val / rate_val)
+                    else:
+                        hours.append(0)
+                except:
+                    hours.append(0)
+            return hours
 
         hour_upper = calculate_hours_safe(upper_current, avg_rate_upper)
         hour_lower = calculate_hours_safe(lower_current, avg_rate_lower)
