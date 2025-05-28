@@ -42,7 +42,7 @@ if page == "📊 หน้าแสดงผล rate และ ชั่วโ�
         sheet_names.remove("Sheet1")
         sheet_names = ["Sheet1"] + sheet_names
 
-    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้", min_value=1, max_value=len(sheet_names), value=7)
+    sheet_count = st.number_input("📌 เลือกจำนวน Sheet ที่ต้องใช้",min_value=1,max_value=len(sheet_names),value=1)
     selected_sheets = sheet_names[:sheet_count]
     
 
